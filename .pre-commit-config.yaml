@@ -1,0 +1,62 @@
+ci:
+  autoupdate_schedule: monthly
+
+exclude: ^zmq/eventloop/minitornado/
+repos:
+  - repo: local
+    hooks:
+      - id: constants
+        name: constants
+        files: "^.*/constants.py"
+        description: Generate constants files
+        entry: python -m buildutils.constants
+        language: python
+        pass_filenames: false
+        additional_dependencies:
+          - ruff
+  - repo: https://github.com/executablebooks/mdformat
+    rev: 0.7.22  # Use the ref you want to point at
+    hooks:
+      - id: mdformat
+        # Optionally add plugins
+        additional_dependencies:
+          - mdformat-black
+          - mdformat-myst
+        exclude: LICENSE.md
+
+  # autoformat and lint Python code
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.12.11
+    hooks:
+      - id: ruff
+        types_or:
+          - python
+          - jupyter
+          - pyi
+        args: ["--fix", "--show-fixes"]
+      - id: ruff-format
+        types_or:
+          - python
+          - jupyter
+          - pyi
+        # don't format zmq/constants.py twice
+        exclude: zmq/constants.py
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.17.1
+    hooks:
+      - id: mypy
+        files: zmq/.*
+        # mypy gets the wrong results
+        # if we pass specific files instead of the zmq dir
+        # no idea why
+        pass_filenames: false
+        args: [zmq]
+        additional_dependencies:
+          - types-paramiko
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: end-of-file-fixer
+      - id: check-executables-have-shebangs
+      - id: requirements-txt-fixer

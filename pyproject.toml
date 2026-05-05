@@ -1,0 +1,223 @@
+# PEP 621 build info
+[build-system]
+requires = [
+  "cffi; implementation_name == 'pypy'",
+  "cython>=3.0.0; implementation_name != 'pypy'",
+  "packaging",
+  "scikit-build-core>=0.10",
+]
+build-backend = "scikit_build_core.build"
+
+# Project metadata
+# ref: https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html
+[project]
+name = "pyzmq"
+version = "27.1.0"
+authors = [
+  { name = "PyZMQ Contributors", email = "zeromq-dev@lists.zeromq.org" },
+  { name = "Brian E. Granger" },
+  { name = "Min Ragan-Kelley" },
+]
+license = { file = "LICENSE.md" }
+requires-python = ">=3.8"
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Science/Research",
+  "Intended Audience :: System Administrators",
+  "License :: OSI Approved :: BSD License",
+  "Operating System :: MacOS :: MacOS X",
+  "Operating System :: Microsoft :: Windows",
+  "Operating System :: POSIX",
+  "Topic :: System :: Networking",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+]
+dependencies = ["cffi; implementation_name == 'pypy'"]
+description = "Python bindings for 0MQ"
+readme = "README.md"
+
+[project.urls]
+Homepage = "https://pyzmq.readthedocs.org"
+Documentation = "https://pyzmq.readthedocs.org"
+Source = "https://github.com/zeromq/pyzmq"
+Tracker = "https://github.com/zeromq/pyzmq/issues"
+
+[tool.scikit-build]
+wheel.packages = ["zmq"]
+wheel.license-files = ["licenses/LICENSE*"]
+# 3.15 is required by scikit-build-core
+cmake.version = ">=3.15"
+# only build/install the pyzmq component
+build.targets = ["pyzmq"]
+install.components = ["pyzmq"]
+
+[[tool.scikit-build.overrides]]
+if.env.PYZMQ_BACKEND = "cffi"
+build.requires = ["cffi"]
+
+[[tool.scikit-build.overrides]]
+if.any.env.PYZMQ_LATEST_CYTHON = true
+build.requires = ["cython @ https://github.com/cython/cython/archive/HEAD.tar.gz"]
+
+
+[tool.ruff]
+
+[tool.ruff.format]
+exclude = [
+    "buildutils/templates/*",
+    "zmq/eventloop/minitornado/*",
+]
+quote-style = "preserve"
+
+[tool.ruff.lint.isort]
+known-first-party = ["zmq", "zmq_test_utils"]
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "F",
+    "UP",
+    "I",
+]
+ignore = [
+    "E501", # line length (formatter is responsible)
+    "E721", # compare types
+    "F841", # unused variables
+]
+exclude = ["buildutils/templates/*"]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F4", "E4"]
+"__init__.pyi" = ["F4", "E4"]
+"tests/*" = ["E4", "F4"]
+"docs/source/conf.py" = ["E4"]
+"zmq/eventloop/*" = ["E402"]
+"zmq/ssh/forward.py" = ["E"]
+
+# no longer used autoformatters, linters:
+
+[tool.autoflake]
+ignore-init-module-imports = true
+remove-all-unused-imports = true
+remove-duplicate-keys = true
+
+# remove-unused-variables = true
+
+[tool.black]
+skip-string-normalization = true
+exclude = "zmq/eventloop/minitornado|docs/source/conf.py"
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+skip = ["zmq/__init__.py"]
+
+[tool.tbump]
+# Uncomment this if your project is hosted on GitHub:
+github_url = "https://github.com/zeromq/pyzmq"
+
+[tool.tbump.version]
+current = "27.1.0"
+regex = '''
+  (?P<major>\d+)
+  \.
+  (?P<minor>\d+)
+  \.
+  (?P<patch>\d+)
+  (?P<pre>((a|b|rc|)\d+)|.dev\d*|)
+  '''
+
+[tool.tbump.git]
+message_template = "Bump to {new_version}"
+tag_template = "v{new_version}"
+
+# For each file to patch, add a [[tool.tbump.file]] config
+# section containing the path of the file, relative to the
+# pyproject.toml location.
+[[tool.tbump.file]]
+src = "pyproject.toml"
+search = 'version = "{current_version}"'
+
+[[tool.tbump.file]]
+src = "zmq/sugar/version.py"
+search = '__version__: str = "{current_version}"'
+
+[tool.cibuildwheel]
+build-verbosity = "1"
+enable = ["cpython-freethreading", "pypy", "pypy-eol"]
+test-requires = ["pytest>=6", "importlib_metadata"]
+test-sources = ["tools/test_wheel.py"]
+test-command = "python -m pytest -vsx tools/test_wheel.py"
+build-frontend = "build"
+
+[tool.cibuildwheel.environment]
+NO_CYTHON_COMPILE = "true"
+
+[tool.cibuildwheel.linux]
+before-all = "bash tools/install_libzmq.sh"
+manylinux-x86_64-image = "manylinux_2_28"
+manylinux-i686-image = "manylinux2014"
+manylinux-aarch64-image = "manylinux_2_28"
+musllinux-aarch64-image = "musllinux_1_2"
+musllinux-i686-image = "musllinux_1_2"
+musllinux-x86_64-image = "musllinux_1_2"
+
+[tool.cibuildwheel.linux.environment]
+ZMQ_PREFIX = "/usr/local"
+CFLAGS = "-Wl,-strip-all"
+CXXFLAGS = "-Wl,-strip-all"
+
+[tool.cibuildwheel.macos]
+before-all = "bash tools/install_libzmq.sh"
+repair-wheel-command = "delocate-wheel --sanitize-rpaths --require-archs {delocate_archs} -w {dest_dir} -v {wheel}"
+
+[tool.cibuildwheel.macos.environment]
+ZMQ_PREFIX = "/tmp/zmq"
+MACOSX_DEPLOYMENT_TARGET = "10.15"
+
+[tool.cibuildwheel.windows]
+before-all = "python buildutils/bundle.py licenses"
+repair-wheel-command = """\
+    delvewheel repair \
+        -v \
+        --wheel-dir={dest_dir} \
+        {wheel} \
+"""
+
+[tool.cibuildwheel.windows.config-settings]
+"cmake.define.ZMQ_PREFIX" = "bundled"
+# statically link MSVCP
+# see https://github.com/zeromq/pyzmq/issues/2012
+# and https://github.com/matplotlib/matplotlib/pull/28687
+"cmake.define.CMAKE_MSVC_RUNTIME_LIBRARY" = "MultiThreaded"
+"cmake.define.CMAKE_SHARED_LINKER_FLAGS" = "ucrt.lib;vcruntime.lib;/nodefaultlib:libucrt.lib;/nodefaultlib:libvcruntime.lib"
+# disable IPC/epoll on Windows
+# due to https://github.com/zeromq/pyzmq/issues/1981
+"cmake.define.ZMQ_HAVE_IPC" = "OFF"
+"cmake.define.POLLER" = "select"
+
+[tool.cibuildwheel.android.environment]
+# 24 needed for c++
+ANDROID_API_LEVEL = "24"
+
+# manylinux2014 for old Python <= 3.9
+[[tool.cibuildwheel.overrides]]
+select = "cp3{8,9}-* pp3{8,9}-*"
+manylinux-x86_64-image = "manylinux2014"
+manylinux-i686-image = "manylinux2014"
+
+# build limited-api wheels for 3.12
+[[tool.cibuildwheel.overrides]]
+select = "cp312-*"
+inherit.config-settings = "append"
+config-settings."wheel.py-api" = "cp312"
+before-build = "pip install abi3audit"
+inherit.repair-wheel-command = "append"
+repair-wheel-command = "abi3audit --strict --report {wheel}"
