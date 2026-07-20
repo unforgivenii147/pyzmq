@@ -1,36 +1,27 @@
-# Copyright (C) PyZMQ Developers
-# Distributed under the terms of the Modified BSD License.
-
-
 import zmq
 from zmq_test_utils import BaseZMQTestCase, GreenTest, have_gevent
 
-x = b' '
+x = b" "
 
 
 class TestPair(BaseZMQTestCase):
     def test_basic(self):
         s1, s2 = self.create_bound_pair(zmq.PAIR, zmq.PAIR)
-
-        msg1 = b'message1'
+        msg1 = b"message1"
         msg2 = self.ping_pong(s1, s2, msg1)
         assert msg1 == msg2
 
     def test_multiple(self):
         s1, s2 = self.create_bound_pair(zmq.PAIR, zmq.PAIR)
-
         for i in range(10):
             msg = i * x
             s1.send(msg)
-
         for i in range(10):
             msg = i * x
             s2.send(msg)
-
         for i in range(10):
             msg = s1.recv()
             assert msg == i * x
-
         for i in range(10):
             msg = s2.recv()
             assert msg == i * x

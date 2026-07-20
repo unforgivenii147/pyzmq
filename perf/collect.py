@@ -23,8 +23,8 @@ import numpy as np
 from perf import do_run
 
 URLs = {
-    'tcp': 'tcp://127.0.0.1:5555',
-    'ipc': 'ipc:///tmp/pyzmq-perf',
+    "tcp": "tcp://127.0.0.1:5555",
+    "ipc": "ipc:///tmp/pyzmq-perf",
 }
 
 
@@ -39,13 +39,13 @@ def timer():
 
 
 def compute_data_point(
-    test, size, copy=True, poll=False, transport='ipc', t_min=1, t_max=3
+    test, size, copy=True, poll=False, transport="ipc", t_min=1, t_max=3
 ):
     url = URLs.get(transport)
     duration = 0
     count = 2
     results = []
-    print(f'copy={copy}, size={size}')
+    print(f"copy={copy}, size={size}")
     print(f"{'count':8} {'dt':5} {'result':7}")
     while duration < t_max:
         with timer() as get_duration:
@@ -55,7 +55,7 @@ def compute_data_point(
         if not isinstance(result, tuple):
             result = (result,)
         duration = get_duration()
-        fmt = '%8i %5.02g {}'.format('%7i ' * len(result))
+        fmt = "%8i %5.02g {}".format("%7i " * len(result))
         print(fmt % ((count, duration) + result))
         if duration >= t_min:
             # within our window, record result
@@ -70,55 +70,55 @@ def compute_data_point(
 
 
 full_names = {
-    'lat': 'latency',
-    'thr': 'throughput',
+    "lat": "latency",
+    "thr": "throughput",
 }
 
 result_columns = {
-    'lat': ['latency'],
-    'thr': ['sends', 'throughput'],
+    "lat": ["latency"],
+    "thr": ["sends", "throughput"],
 }
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Run a zmq performance test')
+    parser = argparse.ArgumentParser(description="Run a zmq performance test")
     parser.add_argument(
-        dest='test',
-        nargs='?',
+        dest="test",
+        nargs="?",
         type=str,
-        default='lat',
-        choices=['lat', 'thr'],
-        help='which test to run',
+        default="lat",
+        choices=["lat", "thr"],
+        help="which test to run",
     )
     parser.add_argument(
-        '--points',
+        "--points",
         type=int,
         default=3,
-        help='how many data points to collect per interval',
+        help="how many data points to collect per interval",
     )
     parser.add_argument(
-        '--max', type=int, default=0, help='maximum msg size (log10, so 3=1000)'
+        "--max", type=int, default=0, help="maximum msg size (log10, so 3=1000)"
     )
     parser.add_argument(
-        '--min', type=int, default=0, help='minimum msg size (log10, so 3=1000)'
+        "--min", type=int, default=0, help="minimum msg size (log10, so 3=1000)"
     )
     args = parser.parse_args()
 
     test = args.test
     full_name = full_names[test]
     print(f"Running {full_name} test")
-    fname = test + '.pickle'
+    fname = test + ".pickle"
     import pandas as pd
 
     data = []
-    transport = 'ipc'
+    transport = "ipc"
     poll = False
     before = None
     if os.path.exists(fname):
-        with open(fname, 'rb') as f:
+        with open(fname, "rb") as f:
             before = pickle.load(f)
 
-    if test == 'lat':
+    if test == "lat":
         nmin = args.min or 2
         nmax = args.max or 7
         t_min = 0.4
@@ -135,11 +135,11 @@ def main():
         for copy in (True, False):
             if before is not None:
                 matching = before[
-                    (before['size'] > (0.8 * size))
-                    & (before['size'] < (1.2 * size))
-                    & (before['copy'] == copy)
-                    & (before['transport'] == transport)
-                    & (before['poll'] == poll)
+                    (before["size"] > (0.8 * size))
+                    & (before["size"] < (1.2 * size))
+                    & (before["copy"] == copy)
+                    & (before["transport"] == transport)
+                    & (before["poll"] == poll)
                 ]
                 if len(matching):
                     print("Already have", matching)
@@ -158,7 +158,7 @@ def main():
                 )
                 df = pd.DataFrame(
                     data,
-                    columns=['size', 'count', 'copy', 'poll', 'transport']
+                    columns=["size", "count", "copy", "poll", "transport"]
                     + result_columns[test],
                 )
                 if before is not None:
@@ -166,5 +166,5 @@ def main():
                 df.to_pickle(fname)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -15,10 +15,6 @@ home = str(Path.home())
 
 
 def summarize_cmake_output(text: str) -> str:
-    """Summarize cmake -LH output
-
-    Formats help strings nicer, excludes common
-    """
     text = text.replace(sys.prefix, "$PREFIX")
     text = text.replace(home, "~")
     chunks = text.split("\n\n")
@@ -27,7 +23,7 @@ def summarize_cmake_output(text: str) -> str:
         if not chunk:
             continue
         lines = chunk.splitlines()
-        doc_lines, assignment = lines[:-1], lines[-1]
+        doc_lines, assignment = (lines[:-1], lines[-1])
         if assignment.startswith(("CMAKE_", "FETCHCONTENT_")):
             continue
         doc_lines = [
@@ -40,7 +36,6 @@ def summarize_cmake_output(text: str) -> str:
 
 
 def summarize_cmake(path: Path) -> str:
-    """Collect summarized cmake -LH output from a repo"""
     path = Path(path).absolute()
     with TemporaryDirectory() as td:
         p = run(

@@ -12,7 +12,7 @@ loop = ioloop.IOLoop.current()
 
 ctx = zmq.Context()
 s = ctx.socket(zmq.ROUTER)
-s.bind('tcp://127.0.0.1:5555')
+s.bind("tcp://127.0.0.1:5555")
 stream = zmqstream.ZMQStream(s)
 
 

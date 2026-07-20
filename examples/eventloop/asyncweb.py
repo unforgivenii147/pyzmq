@@ -13,31 +13,27 @@ import random
 import sys
 import threading
 import time
-
 from tornado import ioloop, web
-
 import zmq
 from zmq.eventloop.future import Context as FutureContext
 
 
 def slow_responder() -> None:
-    """thread for slowly responding to replies."""
     ctx = zmq.Context()
     socket = ctx.socket(zmq.ROUTER)
     socket.linger = 0
-    socket.bind('tcp://127.0.0.1:5555')
+    socket.bind("tcp://127.0.0.1:5555")
     i = 0
     while True:
         frame, msg = socket.recv_multipart()
-        print(f"\nworker received {msg!r}\n", end='')
+        print(f"\nworker received {msg!r}\n", end="")
         time.sleep(random.randint(1, 5))
         socket.send_multipart([frame, msg + f" to you too, #{i}".encode()])
         i += 1
 
 
 def dot() -> None:
-    """callback for showing that IOLoop is still responsive while we wait"""
-    sys.stdout.write('.')
+    sys.stdout.write(".")
     sys.stdout.flush()
 
 
@@ -45,12 +41,8 @@ class TestHandler(web.RequestHandler):
     async def get(self) -> None:
         ctx = FutureContext.instance()
         s = ctx.socket(zmq.DEALER)
-
-        s.connect('tcp://127.0.0.1:5555')
-        # send request to worker
+        s.connect("tcp://127.0.0.1:5555")
         await s.send(b"hello")
-
-        # finish web request with worker's reply
         reply = await s.recv_string()
         print(f"\nfinishing with {reply!r}\n")
         self.write(reply)
@@ -60,8 +52,7 @@ async def setup() -> None:
     worker = threading.Thread(target=slow_responder)
     worker.daemon = True
     worker.start()
-
-    application = web.Application([(r"/", TestHandler)])
+    application = web.Application([("/", TestHandler)])
     beat = ioloop.PeriodicCallback(dot, 100)
     beat.start()
     application.listen(8888)
@@ -73,4 +64,4 @@ if __name__ == "__main__":
     try:
         loop.run_forever()
     except KeyboardInterrupt:
-        print(' Interrupted')
+        print(" Interrupted")

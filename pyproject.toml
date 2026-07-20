@@ -1,4 +1,3 @@
-# PEP 621 build info
 [build-system]
 requires = [
   "cffi; implementation_name == 'pypy'",
@@ -64,32 +63,26 @@ build.requires = ["cffi"]
 
 [[tool.scikit-build.overrides]]
 if.any.env.PYZMQ_LATEST_CYTHON = true
-build.requires = ["cython @ https://github.com/cython/cython/archive/HEAD.tar.gz"]
+build.requires = [
+  "cython @ https://github.com/cython/cython/archive/HEAD.tar.gz",
+]
 
 
 [tool.ruff]
 
 [tool.ruff.format]
-exclude = [
-    "buildutils/templates/*",
-    "zmq/eventloop/minitornado/*",
-]
+exclude = ["buildutils/templates/*", "zmq/eventloop/minitornado/*"]
 quote-style = "preserve"
 
 [tool.ruff.lint.isort]
 known-first-party = ["zmq", "zmq_test_utils"]
 
 [tool.ruff.lint]
-select = [
-    "E",
-    "F",
-    "UP",
-    "I",
-]
+select = ["E", "F", "UP", "I"]
 ignore = [
-    "E501", # line length (formatter is responsible)
-    "E721", # compare types
-    "F841", # unused variables
+  "E501", # line length (formatter is responsible)
+  "E721", # compare types
+  "F841", # unused variables
 ]
 exclude = ["buildutils/templates/*"]
 

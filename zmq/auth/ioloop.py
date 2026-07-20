@@ -8,13 +8,8 @@
 """
 
 import warnings
-
-# Copyright (C) PyZMQ Developers
-# Distributed under the terms of the Modified BSD License.
 from typing import Any, Optional
-
 import zmq
-
 from .asyncio import AsyncioAuthenticator
 
 warnings.warn(
@@ -25,12 +20,10 @@ warnings.warn(
 
 
 class IOLoopAuthenticator(AsyncioAuthenticator):
-    """ZAP authentication for use in the tornado IOLoop"""
-
     def __init__(
         self,
         context: Optional["zmq.Context"] = None,
-        encoding: str = 'utf-8',
+        encoding: str = "utf-8",
         log: Any = None,
         io_loop: Any = None,
     ):
@@ -45,4 +38,4 @@ class IOLoopAuthenticator(AsyncioAuthenticator):
         super().__init__(context=context, encoding=encoding, log=log, loop=loop)
 
 
-__all__ = ['IOLoopAuthenticator']
+__all__ = ["IOLoopAuthenticator"]

@@ -12,7 +12,7 @@ import zmq.asyncio
 
 async def pushing() -> None:
     server = zmq.asyncio.Context.instance().socket(zmq.PUSH)
-    server.bind('tcp://*:9000')
+    server.bind("tcp://*:9000")
     while True:
         await server.send(b"Hello")
         await asyncio.sleep(1)
@@ -20,7 +20,7 @@ async def pushing() -> None:
 
 async def pulling() -> None:
     client = zmq.asyncio.Context.instance().socket(zmq.PULL)
-    client.connect('tcp://127.0.0.1:9000')
+    client.connect("tcp://127.0.0.1:9000")
     while True:
         greeting = await client.recv()
         print(greeting)
@@ -33,5 +33,5 @@ def main() -> None:
     loop.start()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

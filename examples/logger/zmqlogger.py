@@ -28,15 +28,15 @@ LOG_LEVELS = (
 def sub_logger(port: int, level: int = logging.DEBUG) -> None:
     ctx = zmq.Context()
     sub = ctx.socket(zmq.SUB)
-    sub.bind(f'tcp://127.0.0.1:{port}')
+    sub.bind(f"tcp://127.0.0.1:{port}")
     sub.setsockopt(zmq.SUBSCRIBE, b"")
     logging.basicConfig(level=level)
 
     while True:
         level_name, message = sub.recv_multipart()
-        level_name = level_name.decode('ascii').lower()
-        message = message.decode('ascii')
-        if message.endswith('\n'):
+        level_name = level_name.decode("ascii").lower()
+        message = message.decode("ascii")
+        if message.endswith("\n"):
             # trim trailing newline, which will get appended again
             message = message[:-1]
         log = getattr(logging, level_name)
@@ -46,7 +46,7 @@ def sub_logger(port: int, level: int = logging.DEBUG) -> None:
 def log_worker(port: int, interval: float = 1, level: int = logging.DEBUG) -> None:
     ctx = zmq.Context()
     pub = ctx.socket(zmq.PUB)
-    pub.connect(f'tcp://127.0.0.1:{port}')
+    pub.connect(f"tcp://127.0.0.1:{port}")
 
     logger = logging.getLogger(str(os.getpid()))
     logger.setLevel(level)
@@ -60,7 +60,7 @@ def log_worker(port: int, interval: float = 1, level: int = logging.DEBUG) -> No
         time.sleep(interval)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     if len(sys.argv) > 1:
         n = int(sys.argv[1])
     else:

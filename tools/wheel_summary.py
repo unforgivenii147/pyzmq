@@ -7,11 +7,6 @@ from pathlib import Path
 
 
 def make_summary(dist_dir: str | Path) -> str:
-    """Render a list of files as a markdown table
-
-    For use summarizing wheel outputs
-    """
-
     dist_dir = Path(dist_dir)
     all_dists = sorted(dist_dir.glob("*"))
     lines = [
@@ -22,10 +17,10 @@ def make_summary(dist_dir: str | Path) -> str:
     ]
     for path in all_dists:
         size = path.stat().st_size
-        if size < 1e6:
-            size_s = f"{size / 1e3:.0f} kB"
+        if size < 1000000.0:
+            size_s = f"{size / 1000.0:.0f} kB"
         else:
-            size_s = f"{size / 1e6:.1f} MB"
+            size_s = f"{size / 1000000.0:.1f} MB"
         lines.append(f"| {path.name} | {size_s} |")
     return "\n".join(lines)
 

@@ -1,21 +1,3 @@
-#
-# This file is adapted from a paramiko demo, and thus licensed under LGPL 2.1.
-# Original Copyright (C) 2003-2007  Robey Pointer <robeypointer@gmail.com>
-# Edits Copyright (C) 2010 The IPython Team
-#
-# Paramiko is free software; you can redistribute it and/or modify it under the
-# terms of the GNU Lesser General Public License as published by the Free
-# Software Foundation; either version 2.1 of the License, or (at your option)
-# any later version.
-#
-# Paramiko is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
-# details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with Paramiko; if not, see <https://www.gnu.org/licenses/>.
-
 """
 Sample script showing how to do local port forwarding over paramiko.
 
@@ -28,7 +10,7 @@ import logging
 import select
 import socketserver
 
-logger = logging.getLogger('ssh')
+logger = logging.getLogger("ssh")
 
 
 class ForwardServer(socketserver.ThreadingTCPServer):
@@ -40,13 +22,13 @@ class Handler(socketserver.BaseRequestHandler):
     def handle(self):
         try:
             chan = self.ssh_transport.open_channel(
-                'direct-tcpip',
+                "direct-tcpip",
                 (self.chain_host, self.chain_port),
                 self.request.getpeername(),
             )
         except Exception as e:
             logger.debug(
-                'Incoming request to %s:%d failed: %r',
+                "Incoming request to %s:%d failed: %r",
                 self.chain_host,
                 self.chain_port,
                 e,
@@ -54,14 +36,13 @@ class Handler(socketserver.BaseRequestHandler):
             return
         if chan is None:
             logger.debug(
-                'Incoming request to %s:%d was rejected by the SSH server.',
+                "Incoming request to %s:%d was rejected by the SSH server.",
                 self.chain_host,
                 self.chain_port,
             )
             return
-
         logger.debug(
-            f'Connected!  Tunnel open {self.request.getpeername()!r} -> {chan.getpeername()!r} -> {(self.chain_host, self.chain_port)!r}'
+            f"Connected!  Tunnel open {self.request.getpeername()!r} -> {chan.getpeername()!r} -> {(self.chain_host, self.chain_port)!r}"
         )
         while True:
             r, w, x = select.select([self.request, chan], [], [])
@@ -77,19 +58,17 @@ class Handler(socketserver.BaseRequestHandler):
                 self.request.send(data)
         chan.close()
         self.request.close()
-        logger.debug('Tunnel closed ')
+        logger.debug("Tunnel closed ")
 
 
 def forward_tunnel(local_port, remote_host, remote_port, transport):
-    # this is a little convoluted, but lets me configure things for the Handler
-    # object.  (SocketServer doesn't give Handlers any way to access the outer
-    # server normally.)
+
     class SubHander(Handler):
         chain_host = remote_host
         chain_port = remote_port
         ssh_transport = transport
 
-    ForwardServer(('127.0.0.1', local_port), SubHander).serve_forever()
+    ForwardServer(("127.0.0.1", local_port), SubHander).serve_forever()
 
 
-__all__ = ['forward_tunnel']
+__all__ = ["forward_tunnel"]

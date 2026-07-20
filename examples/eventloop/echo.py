@@ -25,7 +25,7 @@ def echo(sock, events):
 
 ctx = zmq.Context.instance()
 s = ctx.socket(zmq.ROUTER)
-s.bind('tcp://127.0.0.1:5555')
+s.bind("tcp://127.0.0.1:5555")
 
 loop = ioloop.IOLoop.current()
 loop.add_handler(s, echo, loop.READ)

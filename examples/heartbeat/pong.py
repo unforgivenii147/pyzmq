@@ -20,7 +20,7 @@ from zmq import devices
 ctx = zmq.Context()
 
 dev = devices.ThreadDevice(zmq.FORWARDER, zmq.REP, -1)
-dev.bind_in('tcp://127.0.0.1:10111')
+dev.bind_in("tcp://127.0.0.1:10111")
 dev.setsockopt_in(zmq.IDENTITY, b"whoda")
 dev.start()
 

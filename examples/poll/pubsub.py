@@ -13,11 +13,11 @@ import zmq
 
 print("Running polling tets for PUB/SUB sockets...")
 
-addr = 'tcp://127.0.0.1:5555'
+addr = "tcp://127.0.0.1:5555"
 ctx = zmq.Context()
 s1 = ctx.socket(zmq.PUB)
 s2 = ctx.socket(zmq.SUB)
-s2.setsockopt(zmq.SUBSCRIBE, '')
+s2.setsockopt(zmq.SUBSCRIBE, "")
 
 s1.bind(addr)
 s2.connect(addr)
@@ -35,7 +35,7 @@ assert socks[s1] == zmq.POLLOUT
 assert s2 not in socks
 
 # Make sure that s1 stays in POLLOUT after a send.
-s1.send('msg1')
+s1.send("msg1")
 socks = dict(poller.poll())
 assert socks[s1] == zmq.POLLOUT
 

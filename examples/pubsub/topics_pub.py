@@ -26,19 +26,19 @@ import zmq
 
 def main() -> None:
     if len(sys.argv) != 2:
-        print('usage: publisher <bind-to>')
+        print("usage: publisher <bind-to>")
         sys.exit(1)
 
     bind_to = sys.argv[1]
 
     all_topics = [
-        b'sports.general',
-        b'sports.football',
-        b'sports.basketball',
-        b'stocks.general',
-        b'stocks.GOOG',
-        b'stocks.AAPL',
-        b'weather',
+        b"sports.general",
+        b"sports.football",
+        b"sports.basketball",
+        b"stocks.general",
+        b"stocks.GOOG",
+        b"stocks.AAPL",
+        b"weather",
     ]
 
     ctx = zmq.Context()

@@ -15,16 +15,16 @@ class CustomContext(zmq.Context):
     extra_arg: str
     _socket_class = CustomSocket
 
-    def __init__(self, extra_arg: str = 'x'):
+    def __init__(self, extra_arg: str = "x"):
         super().__init__()
         self.extra_arg = extra_arg
 
 
 def test_custom_context():
-    ctx = CustomContext('s')
+    ctx = CustomContext("s")
     assert isinstance(ctx, CustomContext)
 
-    assert ctx.extra_arg == 's'
+    assert ctx.extra_arg == "s"
     s = ctx.socket(zmq.PUSH, custom_attr=10)
     assert isinstance(s, CustomSocket)
     assert s.custom_attr == 10

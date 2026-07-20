@@ -6,7 +6,7 @@
 # license is in the file LICENSE.BSD, distributed as part of this
 # software.
 
-__author__ = 'Guido Goldstein'
+__author__ = "Guido Goldstein"
 
 import threading
 import time
@@ -17,7 +17,7 @@ from zmq.utils.monitor import recv_monitor_message
 
 
 def line() -> None:
-    print('-' * 40)
+    print("-" * 40)
 
 
 print(f"libzmq-{zmq.zmq_version()}")
@@ -27,7 +27,7 @@ if zmq.zmq_version_info() < (4, 0):
 EVENT_MAP = {}
 print("Event names:")
 for name in dir(zmq):
-    if name.startswith('EVENT_'):
+    if name.startswith("EVENT_"):
         value = getattr(zmq, name)
         print(f"{name:21} : {value:4}")
         EVENT_MAP[value] = name
@@ -38,9 +38,9 @@ def event_monitor(monitor: zmq.Socket) -> None:
         evt: Dict[str, Any] = {}
         mon_evt = recv_monitor_message(monitor)
         evt.update(mon_evt)
-        evt['description'] = EVENT_MAP[evt['event']]
+        evt["description"] = EVENT_MAP[evt["event"]]
         print(f"Event: {evt}")
-        if evt['event'] == zmq.EVENT_MONITOR_STOPPED:
+        if evt["event"] == zmq.EVENT_MONITOR_STOPPED:
             break
     monitor.close()
     print()

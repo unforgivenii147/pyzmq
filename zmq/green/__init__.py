@@ -1,13 +1,3 @@
-# -----------------------------------------------------------------------------
-#  Copyright (C) 2011-2012 Travis Cline
-#
-#  This file is part of pyzmq
-#  It is adapted from upstream project zeromq_gevent under the New BSD License
-#
-#  Distributed under the terms of the New BSD License.  The full license is in
-#  the file LICENSE.BSD, distributed as part of this software.
-# -----------------------------------------------------------------------------
-
 """zmq.green - gevent compatibility with zeromq.
 
 Usage
@@ -29,20 +19,16 @@ to trigger needed events.
 """
 
 from __future__ import annotations
-
 from typing import List
-
 import zmq as _zmq
 from zmq import *
 from zmq.green.core import _Context, _Socket
 from zmq.green.poll import _Poller
 
-Context = _Context  # type: ignore
-Socket = _Socket  # type: ignore
-Poller = _Poller  # type: ignore
-
-from zmq.green.device import device  # type: ignore
+Context = _Context
+Socket = _Socket
+Poller = _Poller
+from zmq.green.device import device
 
 __all__: list[str] = []
-# adding `__all__` to __init__.pyi gets mypy all confused
-__all__.extend(_zmq.__all__)  # type: ignore
+__all__.extend(_zmq.__all__)

@@ -18,7 +18,7 @@ import zmq
 ctx = zmq.Context()
 
 req = ctx.socket(zmq.REQ)
-req.connect('tcp://127.0.0.1:10111')
+req.connect("tcp://127.0.0.1:10111")
 
 # wait for connects
 time.sleep(1)
@@ -28,7 +28,7 @@ while True:
     time.sleep(t)
     for i in range(4):
         n += 1
-        msg = f'ping {n}'
+        msg = f"ping {n}"
         tic = time.time()
         req.send_string(msg)
         resp = req.recv_string()

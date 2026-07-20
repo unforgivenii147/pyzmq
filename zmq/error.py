@@ -1,58 +1,25 @@
 """0MQ Error classes and functions."""
 
-# Copyright (C) PyZMQ Developers
-# Distributed under the terms of the Modified BSD License.
 from __future__ import annotations
-
 from errno import EINTR
 
 
 class DraftFDWarning(RuntimeWarning):
-    """Warning for using experimental FD on draft sockets.
-
-    .. versionadded:: 27
-    """
-
     def __init__(self, msg=""):
         if not msg:
-            msg = (
-                "pyzmq's back-fill socket.FD support on thread-safe sockets is experimental, and may be removed."
-                " This warning will go away automatically if/when libzmq implements socket.FD on thread-safe sockets."
-                " You can suppress this warning with `warnings.simplefilter('ignore', zmq.error.DraftFDWarning)"
-            )
+            msg = "pyzmq's back-fill socket.FD support on thread-safe sockets is experimental, and may be removed. This warning will go away automatically if/when libzmq implements socket.FD on thread-safe sockets. You can suppress this warning with `warnings.simplefilter('ignore', zmq.error.DraftFDWarning)"
         super().__init__(msg)
 
 
 class ZMQBaseError(Exception):
-    """Base exception class for 0MQ errors in Python."""
+    pass
 
 
 class ZMQError(ZMQBaseError):
-    """Wrap an errno style error.
-
-    Parameters
-    ----------
-    errno : int
-        The ZMQ errno or None.  If None, then ``zmq_errno()`` is called and
-        used.
-    msg : str
-        Description of the error or None.
-    """
-
     errno: int | None = None
     strerror: str
 
     def __init__(self, errno: int | None = None, msg: str | None = None):
-        """Wrap an errno style error.
-
-        Parameters
-        ----------
-        errno : int
-            The ZMQ errno or None.  If None, then ``zmq_errno()`` is called and
-            used.
-        msg : string
-            Description of the error or None.
-        """
         from zmq.backend import strerror, zmq_errno
 
         if errno is None:
@@ -63,16 +30,10 @@ class ZMQError(ZMQBaseError):
                 self.strerror = strerror(errno)
             else:
                 self.strerror = msg
+        elif msg is None:
+            self.strerror = str(errno)
         else:
-            if msg is None:
-                self.strerror = str(errno)
-            else:
-                self.strerror = msg
-        # flush signals, because there could be a SIGINT
-        # waiting to pounce, resulting in uncaught exceptions.
-        # Doing this here means getting SIGINT during a blocking
-        # libzmq call will raise a *catchable* KeyboardInterrupt
-        # PyErr_CheckSignals()
+            self.strerror = msg
 
     def __str__(self) -> str:
         return self.strerror
@@ -82,29 +43,14 @@ class ZMQError(ZMQBaseError):
 
 
 class ZMQBindError(ZMQBaseError):
-    """An error for ``Socket.bind_to_random_port()``.
-
-    See Also
-    --------
-    .Socket.bind_to_random_port
-    """
+    pass
 
 
 class NotDone(ZMQBaseError):
-    """Raised when timeout is reached while waiting for 0MQ to finish with a Message
-
-    See Also
-    --------
-    .MessageTracker.wait : object for tracking when ZeroMQ is done
-    """
+    pass
 
 
 class ContextTerminated(ZMQError):
-    """Wrapper for zmq.ETERM
-
-    .. versionadded:: 13.0
-    """
-
     def __init__(self, errno="ignored", msg="ignored"):
         from zmq import ETERM
 
@@ -112,11 +58,6 @@ class ContextTerminated(ZMQError):
 
 
 class Again(ZMQError):
-    """Wrapper for zmq.EAGAIN
-
-    .. versionadded:: 13.0
-    """
-
     def __init__(self, errno="ignored", msg="ignored"):
         from zmq import EAGAIN
 
@@ -124,14 +65,6 @@ class Again(ZMQError):
 
 
 class InterruptedSystemCall(ZMQError, InterruptedError):
-    """Wrapper for EINTR
-
-    This exception should be caught internally in pyzmq
-    to retry system calls, and not propagate to the user.
-
-    .. versionadded:: 14.7
-    """
-
     errno = EINTR
     strerror: str
 
@@ -144,16 +77,12 @@ class InterruptedSystemCall(ZMQError, InterruptedError):
 
 
 def _check_rc(rc, errno=None, error_without_errno=True):
-    """internal utility for checking zmq return condition
-
-    and raising the appropriate Exception class
-    """
     if rc == -1:
         if errno is None:
             from zmq.backend import zmq_errno
 
             errno = zmq_errno()
-        if errno == 0 and not error_without_errno:
+        if errno == 0 and (not error_without_errno):
             return
         from zmq import EAGAIN, ETERM
 
@@ -172,11 +101,6 @@ _zmq_version = None
 
 
 class ZMQVersionError(NotImplementedError):
-    """Raised when a feature is not provided by the linked version of libzmq.
-
-    .. versionadded:: 14.2
-    """
-
     min_version = None
 
     def __init__(self, min_version: str, msg: str = "Feature"):
@@ -200,19 +124,13 @@ def _check_version(
     min_version_info: tuple[int] | tuple[int, int] | tuple[int, int, int],
     msg: str = "Feature",
 ):
-    """Check for libzmq
-
-    raises ZMQVersionError if current zmq version is not at least min_version
-
-    min_version_info is a tuple of integers, and will be compared against zmq.zmq_version_info().
-    """
     global _zmq_version_info
     if _zmq_version_info is None:
         from zmq import zmq_version_info
 
         _zmq_version_info = zmq_version_info()
     if _zmq_version_info < min_version_info:
-        min_version = ".".join(str(v) for v in min_version_info)
+        min_version = ".".join((str(v) for v in min_version_info))
         raise ZMQVersionError(min_version, msg)
 
 

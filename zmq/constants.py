@@ -1,7 +1,6 @@
 """zmq constants as enums"""
 
 from __future__ import annotations
-
 import errno
 import sys
 from enum import Enum, IntEnum, IntFlag
@@ -10,21 +9,10 @@ _HAUSNUMERO = 156384712
 
 
 class Errno(IntEnum):
-    """libzmq error codes
-
-    .. versionadded:: 23
-    """
-
     EAGAIN = errno.EAGAIN
     EFAULT = errno.EFAULT
     EINVAL = errno.EINVAL
-
     if sys.platform.startswith("win"):
-        # Windows: libzmq uses errno.h
-        # while Python errno prefers WSA* variants
-        # many of these were introduced to errno.h in vs2010
-        # ref: https://github.com/python/cpython/blob/3.9/Modules/errnomodule.c#L10-L37
-        # source: https://docs.microsoft.com/en-us/cpp/c-runtime-library/errno-constants
         ENOTSUP = 129
         EPROTONOSUPPORT = 135
         ENOBUFS = 119
@@ -43,7 +31,6 @@ class Errno(IntEnum):
         ETIMEDOUT = 138
         EHOSTUNREACH = 110
         ENETRESET = 117
-
     else:
         ENOTSUP = getattr(errno, "ENOTSUP", _HAUSNUMERO + 1)
         EPROTONOSUPPORT = getattr(errno, "EPROTONOSUPPORT", _HAUSNUMERO + 2)
@@ -63,8 +50,6 @@ class Errno(IntEnum):
         ETIMEDOUT = getattr(errno, "ETIMEDOUT", _HAUSNUMERO + 16)
         EHOSTUNREACH = getattr(errno, "EHOSTUNREACH", _HAUSNUMERO + 17)
         ENETRESET = getattr(errno, "ENETRESET", _HAUSNUMERO + 18)
-
-    # Native 0MQ error codes
     EFSM = _HAUSNUMERO + 51
     ENOCOMPATPROTO = _HAUSNUMERO + 52
     ETERM = _HAUSNUMERO + 53
@@ -72,11 +57,6 @@ class Errno(IntEnum):
 
 
 class ContextOption(IntEnum):
-    """Options for Context.get/set
-
-    .. versionadded:: 23
-    """
-
     IO_THREADS = 1
     MAX_SOCKETS = 2
     SOCKET_LIMIT = 3
@@ -90,11 +70,6 @@ class ContextOption(IntEnum):
 
 
 class SocketType(IntEnum):
-    """zmq socket types
-
-    .. versionadded:: 23
-    """
-
     PAIR = 0
     PUB = 1
     SUB = 2
@@ -107,12 +82,8 @@ class SocketType(IntEnum):
     XPUB = 9
     XSUB = 10
     STREAM = 11
-
-    # deprecated aliases
     XREQ = DEALER
     XREP = ROUTER
-
-    # DRAFT socket types
     SERVER = 12
     CLIENT = 13
     RADIO = 14
@@ -125,51 +96,45 @@ class SocketType(IntEnum):
 
 
 class _OptType(Enum):
-    int = 'int'
-    int64 = 'int64'
-    bytes = 'bytes'
-    fd = 'fd'
+    int = "int"
+    int64 = "int64"
+    bytes = "bytes"
+    fd = "fd"
 
 
 class SocketOption(IntEnum):
-    """Options for Socket.get/set
-
-    .. versionadded:: 23
-    """
-
     _opt_type: _OptType
 
     def __new__(cls, value: int, opt_type: _OptType = _OptType.int):
-        """Attach option type as `._opt_type`"""
         obj = int.__new__(cls, value)
         obj._value_ = value
         obj._opt_type = opt_type
         return obj
 
     HWM = 1
-    AFFINITY = 4, _OptType.int64
-    ROUTING_ID = 5, _OptType.bytes
-    SUBSCRIBE = 6, _OptType.bytes
-    UNSUBSCRIBE = 7, _OptType.bytes
+    AFFINITY = (4, _OptType.int64)
+    ROUTING_ID = (5, _OptType.bytes)
+    SUBSCRIBE = (6, _OptType.bytes)
+    UNSUBSCRIBE = (7, _OptType.bytes)
     RATE = 8
     RECOVERY_IVL = 9
     SNDBUF = 11
     RCVBUF = 12
     RCVMORE = 13
-    FD = 14, _OptType.fd
+    FD = (14, _OptType.fd)
     EVENTS = 15
     TYPE = 16
     LINGER = 17
     RECONNECT_IVL = 18
     BACKLOG = 19
     RECONNECT_IVL_MAX = 21
-    MAXMSGSIZE = 22, _OptType.int64
+    MAXMSGSIZE = (22, _OptType.int64)
     SNDHWM = 23
     RCVHWM = 24
     MULTICAST_HOPS = 25
     RCVTIMEO = 27
     SNDTIMEO = 28
-    LAST_ENDPOINT = 32, _OptType.bytes
+    LAST_ENDPOINT = (32, _OptType.bytes)
     ROUTER_MANDATORY = 33
     TCP_KEEPALIVE = 34
     TCP_KEEPALIVE_CNT = 35
@@ -181,30 +146,30 @@ class SocketOption(IntEnum):
     IPV6 = 42
     MECHANISM = 43
     PLAIN_SERVER = 44
-    PLAIN_USERNAME = 45, _OptType.bytes
-    PLAIN_PASSWORD = 46, _OptType.bytes
+    PLAIN_USERNAME = (45, _OptType.bytes)
+    PLAIN_PASSWORD = (46, _OptType.bytes)
     CURVE_SERVER = 47
-    CURVE_PUBLICKEY = 48, _OptType.bytes
-    CURVE_SECRETKEY = 49, _OptType.bytes
-    CURVE_SERVERKEY = 50, _OptType.bytes
+    CURVE_PUBLICKEY = (48, _OptType.bytes)
+    CURVE_SECRETKEY = (49, _OptType.bytes)
+    CURVE_SERVERKEY = (50, _OptType.bytes)
     PROBE_ROUTER = 51
     REQ_CORRELATE = 52
     REQ_RELAXED = 53
     CONFLATE = 54
-    ZAP_DOMAIN = 55, _OptType.bytes
+    ZAP_DOMAIN = (55, _OptType.bytes)
     ROUTER_HANDOVER = 56
     TOS = 57
-    CONNECT_ROUTING_ID = 61, _OptType.bytes
+    CONNECT_ROUTING_ID = (61, _OptType.bytes)
     GSSAPI_SERVER = 62
-    GSSAPI_PRINCIPAL = 63, _OptType.bytes
-    GSSAPI_SERVICE_PRINCIPAL = 64, _OptType.bytes
+    GSSAPI_PRINCIPAL = (63, _OptType.bytes)
+    GSSAPI_SERVICE_PRINCIPAL = (64, _OptType.bytes)
     GSSAPI_PLAINTEXT = 65
     HANDSHAKE_IVL = 66
-    SOCKS_PROXY = 68, _OptType.bytes
+    SOCKS_PROXY = (68, _OptType.bytes)
     XPUB_NODROP = 69
     BLOCKY = 70
     XPUB_MANUAL = 71
-    XPUB_WELCOME_MSG = 72, _OptType.bytes
+    XPUB_WELCOME_MSG = (72, _OptType.bytes)
     STREAM_NOTIFY = 73
     INVERT_MATCHING = 74
     HEARTBEAT_IVL = 75
@@ -215,20 +180,17 @@ class SocketOption(IntEnum):
     TCP_MAXRT = 80
     THREAD_SAFE = 81
     MULTICAST_MAXTPDU = 84
-    VMCI_BUFFER_SIZE = 85, _OptType.int64
-    VMCI_BUFFER_MIN_SIZE = 86, _OptType.int64
-    VMCI_BUFFER_MAX_SIZE = 87, _OptType.int64
+    VMCI_BUFFER_SIZE = (85, _OptType.int64)
+    VMCI_BUFFER_MIN_SIZE = (86, _OptType.int64)
+    VMCI_BUFFER_MAX_SIZE = (87, _OptType.int64)
     VMCI_CONNECT_TIMEOUT = 88
     USE_FD = 89
     GSSAPI_PRINCIPAL_NAMETYPE = 90
     GSSAPI_SERVICE_PRINCIPAL_NAMETYPE = 91
-    BINDTODEVICE = 92, _OptType.bytes
-
-    # Deprecated options and aliases
-    # must not use name-assignment, must have the same value
+    BINDTODEVICE = (92, _OptType.bytes)
     IDENTITY = ROUTING_ID
     CONNECT_RID = CONNECT_ROUTING_ID
-    TCP_ACCEPT_FILTER = 38, _OptType.bytes
+    TCP_ACCEPT_FILTER = (38, _OptType.bytes)
     IPC_FILTER_PID = 58
     IPC_FILTER_UID = 59
     IPC_FILTER_GID = 60
@@ -236,31 +198,28 @@ class SocketOption(IntEnum):
     DELAY_ATTACH_ON_CONNECT = IMMEDIATE
     FAIL_UNROUTABLE = ROUTER_MANDATORY
     ROUTER_BEHAVIOR = ROUTER_MANDATORY
-
-    # Draft socket options
     ZAP_ENFORCE_DOMAIN = 93
     LOOPBACK_FASTPATH = 94
-    METADATA = 95, _OptType.bytes
+    METADATA = (95, _OptType.bytes)
     MULTICAST_LOOP = 96
     ROUTER_NOTIFY = 97
     XPUB_MANUAL_LAST_VALUE = 98
-    SOCKS_USERNAME = 99, _OptType.bytes
-    SOCKS_PASSWORD = 100, _OptType.bytes
+    SOCKS_USERNAME = (99, _OptType.bytes)
+    SOCKS_PASSWORD = (100, _OptType.bytes)
     IN_BATCH_SIZE = 101
     OUT_BATCH_SIZE = 102
-    WSS_KEY_PEM = 103, _OptType.bytes
-    WSS_CERT_PEM = 104, _OptType.bytes
-    WSS_TRUST_PEM = 105, _OptType.bytes
-    WSS_HOSTNAME = 106, _OptType.bytes
+    WSS_KEY_PEM = (103, _OptType.bytes)
+    WSS_CERT_PEM = (104, _OptType.bytes)
+    WSS_TRUST_PEM = (105, _OptType.bytes)
+    WSS_HOSTNAME = (106, _OptType.bytes)
     WSS_TRUST_SYSTEM = 107
     ONLY_FIRST_SUBSCRIBE = 108
     RECONNECT_STOP = 109
-    HELLO_MSG = 110, _OptType.bytes
-    DISCONNECT_MSG = 111, _OptType.bytes
+    HELLO_MSG = (110, _OptType.bytes)
+    DISCONNECT_MSG = (111, _OptType.bytes)
     PRIORITY = 112
-    # 4.3.5
     BUSY_POLL = 113
-    HICCUP_MSG = 114, _OptType.bytes
+    HICCUP_MSG = (114, _OptType.bytes)
     XSUB_VERBOSE_UNSUBSCRIBE = 115
     TOPICS_COUNT = 116
     NORM_MODE = 117
@@ -274,35 +233,18 @@ class SocketOption(IntEnum):
 
 
 class MessageOption(IntEnum):
-    """Options on zmq.Frame objects
-
-    .. versionadded:: 23
-    """
-
     MORE = 1
     SHARED = 3
-    # Deprecated message options
     SRCFD = 2
 
 
 class Flag(IntFlag):
-    """Send/recv flags
-
-    .. versionadded:: 23
-    """
-
     DONTWAIT = 1
     SNDMORE = 2
     NOBLOCK = DONTWAIT
 
 
 class RouterNotify(IntEnum):
-    """Values for zmq.ROUTER_NOTIFY socket option
-
-    .. versionadded:: 26
-    .. versionadded:: libzmq-4.3.0 (draft)
-    """
-
     @staticmethod
     def _global_name(name):
         return f"NOTIFY_{name}"
@@ -312,12 +254,6 @@ class RouterNotify(IntEnum):
 
 
 class NormMode(IntEnum):
-    """Values for zmq.NORM_MODE socket option
-
-    .. versionadded:: 26
-    .. versionadded:: libzmq-4.3.5 (draft)
-    """
-
     @staticmethod
     def _global_name(name):
         return f"NORM_{name}"
@@ -330,11 +266,6 @@ class NormMode(IntEnum):
 
 
 class SecurityMechanism(IntEnum):
-    """Security mechanisms (as returned by ``socket.get(zmq.MECHANISM)``)
-
-    .. versionadded:: 23
-    """
-
     NULL = 0
     PLAIN = 1
     CURVE = 2
@@ -342,89 +273,66 @@ class SecurityMechanism(IntEnum):
 
 
 class ReconnectStop(IntEnum):
-    """Select behavior for socket.reconnect_stop
-
-    .. versionadded:: 25
-    """
-
     @staticmethod
     def _global_name(name):
         return f"RECONNECT_STOP_{name}"
 
-    CONN_REFUSED = 0x1
-    HANDSHAKE_FAILED = 0x2
-    AFTER_DISCONNECT = 0x4
+    CONN_REFUSED = 1
+    HANDSHAKE_FAILED = 2
+    AFTER_DISCONNECT = 4
 
 
 class Event(IntFlag):
-    """Socket monitoring events
-
-    .. versionadded:: 23
-    """
-
     @staticmethod
     def _global_name(name):
         if name.startswith("PROTOCOL_ERROR_"):
             return name
         else:
-            # add EVENT_ prefix
             return "EVENT_" + name
 
-    PROTOCOL_ERROR_WS_UNSPECIFIED = 0x30000000
-    PROTOCOL_ERROR_ZMTP_UNSPECIFIED = 0x10000000
-    PROTOCOL_ERROR_ZMTP_UNEXPECTED_COMMAND = 0x10000001
-    PROTOCOL_ERROR_ZMTP_INVALID_SEQUENCE = 0x10000002
-    PROTOCOL_ERROR_ZMTP_KEY_EXCHANGE = 0x10000003
-    PROTOCOL_ERROR_ZMTP_MALFORMED_COMMAND_UNSPECIFIED = 0x10000011
-    PROTOCOL_ERROR_ZMTP_MALFORMED_COMMAND_MESSAGE = 0x10000012
-    PROTOCOL_ERROR_ZMTP_MALFORMED_COMMAND_HELLO = 0x10000013
-    PROTOCOL_ERROR_ZMTP_MALFORMED_COMMAND_INITIATE = 0x10000014
-    PROTOCOL_ERROR_ZMTP_MALFORMED_COMMAND_ERROR = 0x10000015
-    PROTOCOL_ERROR_ZMTP_MALFORMED_COMMAND_READY = 0x10000016
-    PROTOCOL_ERROR_ZMTP_MALFORMED_COMMAND_WELCOME = 0x10000017
-    PROTOCOL_ERROR_ZMTP_INVALID_METADATA = 0x10000018
-
-    PROTOCOL_ERROR_ZMTP_CRYPTOGRAPHIC = 0x11000001
-    PROTOCOL_ERROR_ZMTP_MECHANISM_MISMATCH = 0x11000002
-    PROTOCOL_ERROR_ZAP_UNSPECIFIED = 0x20000000
-    PROTOCOL_ERROR_ZAP_MALFORMED_REPLY = 0x20000001
-    PROTOCOL_ERROR_ZAP_BAD_REQUEST_ID = 0x20000002
-    PROTOCOL_ERROR_ZAP_BAD_VERSION = 0x20000003
-    PROTOCOL_ERROR_ZAP_INVALID_STATUS_CODE = 0x20000004
-    PROTOCOL_ERROR_ZAP_INVALID_METADATA = 0x20000005
-
-    # define event types _after_ overlapping protocol error masks
-    CONNECTED = 0x0001
-    CONNECT_DELAYED = 0x0002
-    CONNECT_RETRIED = 0x0004
-    LISTENING = 0x0008
-    BIND_FAILED = 0x0010
-    ACCEPTED = 0x0020
-    ACCEPT_FAILED = 0x0040
-    CLOSED = 0x0080
-    CLOSE_FAILED = 0x0100
-    DISCONNECTED = 0x0200
-    MONITOR_STOPPED = 0x0400
-
-    HANDSHAKE_FAILED_NO_DETAIL = 0x0800
-    HANDSHAKE_SUCCEEDED = 0x1000
-    HANDSHAKE_FAILED_PROTOCOL = 0x2000
-    HANDSHAKE_FAILED_AUTH = 0x4000
-
-    ALL_V1 = 0xFFFF
+    PROTOCOL_ERROR_WS_UNSPECIFIED = 805306368
+    PROTOCOL_ERROR_ZMTP_UNSPECIFIED = 268435456
+    PROTOCOL_ERROR_ZMTP_UNEXPECTED_COMMAND = 268435457
+    PROTOCOL_ERROR_ZMTP_INVALID_SEQUENCE = 268435458
+    PROTOCOL_ERROR_ZMTP_KEY_EXCHANGE = 268435459
+    PROTOCOL_ERROR_ZMTP_MALFORMED_COMMAND_UNSPECIFIED = 268435473
+    PROTOCOL_ERROR_ZMTP_MALFORMED_COMMAND_MESSAGE = 268435474
+    PROTOCOL_ERROR_ZMTP_MALFORMED_COMMAND_HELLO = 268435475
+    PROTOCOL_ERROR_ZMTP_MALFORMED_COMMAND_INITIATE = 268435476
+    PROTOCOL_ERROR_ZMTP_MALFORMED_COMMAND_ERROR = 268435477
+    PROTOCOL_ERROR_ZMTP_MALFORMED_COMMAND_READY = 268435478
+    PROTOCOL_ERROR_ZMTP_MALFORMED_COMMAND_WELCOME = 268435479
+    PROTOCOL_ERROR_ZMTP_INVALID_METADATA = 268435480
+    PROTOCOL_ERROR_ZMTP_CRYPTOGRAPHIC = 285212673
+    PROTOCOL_ERROR_ZMTP_MECHANISM_MISMATCH = 285212674
+    PROTOCOL_ERROR_ZAP_UNSPECIFIED = 536870912
+    PROTOCOL_ERROR_ZAP_MALFORMED_REPLY = 536870913
+    PROTOCOL_ERROR_ZAP_BAD_REQUEST_ID = 536870914
+    PROTOCOL_ERROR_ZAP_BAD_VERSION = 536870915
+    PROTOCOL_ERROR_ZAP_INVALID_STATUS_CODE = 536870916
+    PROTOCOL_ERROR_ZAP_INVALID_METADATA = 536870917
+    CONNECTED = 1
+    CONNECT_DELAYED = 2
+    CONNECT_RETRIED = 4
+    LISTENING = 8
+    BIND_FAILED = 16
+    ACCEPTED = 32
+    ACCEPT_FAILED = 64
+    CLOSED = 128
+    CLOSE_FAILED = 256
+    DISCONNECTED = 512
+    MONITOR_STOPPED = 1024
+    HANDSHAKE_FAILED_NO_DETAIL = 2048
+    HANDSHAKE_SUCCEEDED = 4096
+    HANDSHAKE_FAILED_PROTOCOL = 8192
+    HANDSHAKE_FAILED_AUTH = 16384
+    ALL_V1 = 65535
     ALL = ALL_V1
-
-    # DRAFT Socket monitoring events
-    PIPES_STATS = 0x10000
+    PIPES_STATS = 65536
     ALL_V2 = ALL_V1 | PIPES_STATS
 
 
 class PollEvent(IntFlag):
-    """Which events to poll for in poll methods
-
-    .. versionadded: 23
-    """
-
     POLLIN = 1
     POLLOUT = 2
     POLLERR = 4
@@ -432,17 +340,9 @@ class PollEvent(IntFlag):
 
 
 class DeviceType(IntEnum):
-    """Device type constants for zmq.device
-
-    .. versionadded: 23
-    """
-
     STREAMER = 1
     FORWARDER = 2
     QUEUE = 3
-
-
-# AUTOGENERATED_BELOW_HERE
 
 
 IO_THREADS: int = ContextOption.IO_THREADS
@@ -709,7 +609,6 @@ SCATTER: int = SocketType.SCATTER
 DGRAM: int = SocketType.DGRAM
 PEER: int = SocketType.PEER
 CHANNEL: int = SocketType.CHANNEL
-
 __all__: list[str] = [
     "ContextOption",
     "IO_THREADS",

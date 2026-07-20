@@ -1,14 +1,9 @@
 from typing import Any, Callable, List, Optional, Set, Tuple, TypeVar, Union, overload
-
 from typing_extensions import Literal
-
 import zmq
-
 from .select import select_backend
 
-# avoid collision in Frame.bytes
 _bytestr = bytes
-
 T = TypeVar("T")
 
 class Frame:
@@ -16,6 +11,7 @@ class Frame:
     bytes: bytes
     more: bool
     tracker: Any
+
     def __init__(
         self,
         data: Any = None,
@@ -31,8 +27,6 @@ class Socket:
     underlying: int
     context: zmq.Context
     copy_threshold: int
-
-    # specific option types
     FD: int
 
     def __init__(
@@ -50,49 +44,30 @@ class Socket:
     def bind(self, url: str): ...
     def unbind(self, url: str) -> None: ...
     def send(
-        self,
-        data: Any,
-        flags: int = ...,
-        copy: bool = ...,
-        track: bool = ...,
+        self, data: Any, flags: int = ..., copy: bool = ..., track: bool = ...
     ) -> zmq.MessageTracker | None: ...
     @overload
     def recv(
-        self,
-        flags: int = ...,
-        *,
-        copy: Literal[False],
-        track: bool = ...,
+        self, flags: int = ..., *, copy: Literal[False], track: bool = ...
     ) -> zmq.Frame: ...
     @overload
     def recv(
-        self,
-        flags: int = ...,
-        *,
-        copy: Literal[True],
-        track: bool = ...,
+        self, flags: int = ..., *, copy: Literal[True], track: bool = ...
     ) -> bytes: ...
     @overload
-    def recv(
-        self,
-        flags: int = ...,
-        track: bool = False,
-    ) -> bytes: ...
+    def recv(self, flags: int = ..., track: bool = False) -> bytes: ...
     @overload
     def recv(
-        self,
-        flags: int | None = ...,
-        copy: bool = ...,
-        track: bool | None = False,
+        self, flags: int | None = ..., copy: bool = ..., track: bool | None = False
     ) -> zmq.Frame | bytes: ...
     def recv_into(self, buf, /, *, nbytes: int = 0, flags: int = 0) -> int: ...
     def monitor(self, addr: str | None, events: int) -> None: ...
-    # draft methods
     def join(self, group: str) -> None: ...
     def leave(self, group: str) -> None: ...
 
 class Context:
     underlying: int
+
     def __init__(self, io_threads: int = 1, shadow: int = 0): ...
     def get(self, option: int) -> int | bytes | str: ...
     def set(self, option: int, value: int | bytes | str) -> None: ...

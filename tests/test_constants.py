@@ -1,8 +1,4 @@
-# Copyright (C) PyZMQ Developers
-# Distributed under the terms of the Modified BSD License.
-
 import pytest
-
 import zmq
 import zmq.constants
 

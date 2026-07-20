@@ -24,7 +24,7 @@ import zmq
 
 def main() -> None:
     if len(sys.argv) < 2:
-        print('usage: subscriber <connect_to> [topic topic ...]')
+        print("usage: subscriber <connect_to> [topic topic ...]")
         sys.exit(1)
 
     connect_to = sys.argv[1]
@@ -36,18 +36,18 @@ def main() -> None:
     # manage subscriptions
     if not topics:
         print("Receiving messages on ALL topics...")
-        s.setsockopt(zmq.SUBSCRIBE, b'')
+        s.setsockopt(zmq.SUBSCRIBE, b"")
     else:
         print(f"Receiving messages on topics: {topics} ...")
         for t in topics:
-            s.setsockopt(zmq.SUBSCRIBE, t.encode('utf-8'))
+            s.setsockopt(zmq.SUBSCRIBE, t.encode("utf-8"))
     print
     try:
         while True:
             topic, msg = s.recv_multipart()
             print(
-                '   Topic: {}, msg:{}'.format(
-                    topic.decode('utf-8'), msg.decode('utf-8')
+                "   Topic: {}, msg:{}".format(
+                    topic.decode("utf-8"), msg.decode("utf-8")
                 )
             )
     except KeyboardInterrupt:

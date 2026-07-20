@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+
+
 """
 
 For use with heart.py
@@ -15,18 +17,12 @@ Authors
 
 import time
 from typing import Set
-
 from tornado import ioloop
-
 import zmq
 from zmq.eventloop import zmqstream
 
 
 class HeartBeater:
-    """A basic HeartBeater class
-    pingstream: a PUB stream
-    pongstream: an ROUTER stream"""
-
     def __init__(
         self,
         loop: ioloop.IOLoop,
@@ -36,16 +32,13 @@ class HeartBeater:
     ):
         self.loop = loop
         self.period = period
-
         self.pingstream = pingstream
         self.pongstream = pongstream
         self.pongstream.on_recv(self.handle_pong)
-
         self.hearts: Set = set()
         self.responses: Set = set()
         self.lifetime = 0
         self.tic = time.monotonic()
-
         self.caller = ioloop.PeriodicCallback(self.beat, period)
         self.caller.start()
 
@@ -54,11 +47,9 @@ class HeartBeater:
         self.lifetime += toc - self.tic
         self.tic = toc
         print(self.lifetime)
-        # self.message = str(self.lifetime)
         goodhearts = self.hearts.intersection(self.responses)
         heartfailures = self.hearts.difference(goodhearts)
         newhearts = self.responses.difference(goodhearts)
-        # print(newhearts, goodhearts, heartfailures)
         for heart in newhearts:
             self.handle_new_heart(heart)
         for heart in heartfailures:
@@ -76,27 +67,20 @@ class HeartBeater:
         self.hearts.remove(heart)
 
     def handle_pong(self, msg):
-        "if heart is beating"
         if msg[1] == str(self.lifetime):
             self.responses.add(msg[0])
         else:
             print(f"got bad heartbeat (possibly old?): {msg[1]}")
 
 
-# sub.setsockopt(zmq.SUBSCRIBE)
-
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     loop = ioloop.IOLoop()
     context = zmq.Context()
     pub = context.socket(zmq.PUB)
-    pub.bind('tcp://127.0.0.1:5555')
+    pub.bind("tcp://127.0.0.1:5555")
     router = context.socket(zmq.ROUTER)
-    router.bind('tcp://127.0.0.1:5556')
-
+    router.bind("tcp://127.0.0.1:5556")
     outstream = zmqstream.ZMQStream(pub, loop)
     instream = zmqstream.ZMQStream(router, loop)
-
     hb = HeartBeater(loop, outstream, instream)
-
     loop.start()

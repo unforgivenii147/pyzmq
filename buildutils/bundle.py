@@ -11,14 +11,12 @@ from urllib.request import urlretrieve
 buildutils = Path(__file__).parent
 repo_root = buildutils.parent.resolve()
 licenses = repo_root / "licenses"
-
 bundled_libsodium_version = "1.0.20"
 bundled_version = "4.3.5"
 
 
 def report_version(library="libzmq"):
-    """Report the bundled version of the dependency"""
-    if library == 'libsodium':
+    if library == "libsodium":
         v = bundled_libsodium_version
     else:
         v = bundled_version
@@ -26,7 +24,6 @@ def report_version(library="libzmq"):
 
 
 def fetch_licenses():
-    """Download license files for bundled dependencies"""
     licenses.mkdir(exist_ok=True)
     libsodium_license_url = f"https://raw.githubusercontent.com/jedisct1/libsodium/{bundled_libsodium_version}-RELEASE/LICENSE"
     libzmq_license_url = (
@@ -43,15 +40,10 @@ def fetch_licenses():
 
 
 def main():
-    """print version
-
-    for easier consumption by non-python
-    """
     if len(sys.argv) > 1:
         cmd = sys.argv[1]
     else:
         cmd = "libzmq"
-
     if cmd in {"libzmq", "libsodium"}:
         report_version(cmd)
     elif cmd == "licenses":

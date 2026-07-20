@@ -28,7 +28,7 @@ class Server:
     def __init__(self, url: str):
         context = Context.instance()
         socket = context.socket(zmq.ROUTER)
-        socket.setsockopt_string(zmq.IDENTITY, 'server')
+        socket.setsockopt_string(zmq.IDENTITY, "server")
         socket.bind(url)
         self.socket = socket
 
@@ -38,7 +38,7 @@ class Server:
         req = await self.socket.recv_multipart()
         print(f"Server received {req}")
         # identity of receptionist, empty frame, message content
-        await self.socket.send_multipart([req[0], b'', b'whatup'])
+        await self.socket.send_multipart([req[0], b"", b"whatup"])
 
         # continue to run by returning this `Wire`
         return self.run
@@ -57,7 +57,7 @@ class Client:
     async def run(self, ev: EventLoop):
         await asyncio.sleep(0.1)
         # identity of receptionist, empty frame, message content
-        await self.socket.send_multipart([b'server', b'', b'cheers'])
+        await self.socket.send_multipart([b"server", b"", b"cheers"])
         rep = await self.socket.recv_multipart()
         print(f"{self.name} received {rep}")
 
@@ -66,10 +66,10 @@ class Client:
 
 
 async def main() -> None:
-    url = 'inproc://test_zmq'
+    url = "inproc://test_zmq"
     srv = Server(url)
-    romeo = Client(url, 'romeo')
-    sierra = Client(url, 'sierra')
+    romeo = Client(url, "romeo")
+    sierra = Client(url, "sierra")
 
     async with EventLoop(1.0) as ev:
         ev.start(romeo.run)

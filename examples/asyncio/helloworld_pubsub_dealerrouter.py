@@ -20,16 +20,16 @@ from zmq.asyncio import Context
 # set message based on language
 class HelloWorld:
     def __init__(self) -> None:
-        self.lang = 'eng'
+        self.lang = "eng"
         self.msg = "Hello World"
 
     def change_language(self) -> None:
-        if self.lang == 'eng':
-            self.lang = 'jap'
+        if self.lang == "eng":
+            self.lang = "jap"
             self.msg = "Hello Sekai"
 
         else:
-            self.lang = 'eng'
+            self.lang = "eng"
             self.msg = "Hello World"
 
     def msg_pub(self) -> str:
@@ -46,7 +46,7 @@ class HelloWorldPrinter:
 
 # manages message flow between publishers and subscribers
 class HelloWorldMessage:
-    def __init__(self, url: str = '127.0.0.1', port: int = 5555):
+    def __init__(self, url: str = "127.0.0.1", port: int = 5555):
         # get ZeroMQ version
         print(f"Current libzmq version is {zmq.zmq_version()}")
         print(f"Current  pyzmq version is {zmq.__version__}")
@@ -95,7 +95,7 @@ class HelloWorldMessage:
 
                 # publish message to topic 'world'
                 # multipart: topic, message; async always needs `send_multipart()`?
-                await pub.send_multipart([b'world', msg.encode('utf-8')])
+                await pub.send_multipart([b"world", msg.encode("utf-8")])
 
         except Exception as e:
             print("Error with pub world")
@@ -114,7 +114,7 @@ class HelloWorldMessage:
         # setup subscriber
         sub = self.ctx.socket(zmq.SUB)
         sub.bind(self.url)
-        sub.setsockopt(zmq.SUBSCRIBE, b'world')
+        sub.setsockopt(zmq.SUBSCRIBE, b"world")
         print("World sub initialized")
 
         # without try statement, no error output
@@ -124,7 +124,7 @@ class HelloWorldMessage:
                 [topic, msg] = await sub.recv_multipart()
                 print(f"world sub; topic: {topic.decode()}\tmessage: {msg.decode()}")
                 # process message
-                obj.msg_sub(msg.decode('utf-8'))
+                obj.msg_sub(msg.decode("utf-8"))
 
                 # await asyncio.sleep(.2)
 
@@ -146,7 +146,7 @@ class HelloWorldMessage:
     async def lang_changer_dealer(self) -> None:
         # setup dealer
         deal = self.ctx.socket(zmq.DEALER)
-        deal.setsockopt(zmq.IDENTITY, b'lang_dealer')
+        deal.setsockopt(zmq.IDENTITY, b"lang_dealer")
         deal.connect(self.url[:-1] + f"{int(self.url[-1]) + 1}")
         print("Command dealer initialized")
 
@@ -165,7 +165,7 @@ class HelloWorldMessage:
 
                 # publish message to topic 'world'
                 # multipart: topic, message; async always needs `send_multipart()`?
-                await deal.send_multipart([msg.encode('utf-8')])
+                await deal.send_multipart([msg.encode("utf-8")])
 
         except Exception as e:
             print("Error with pub world")
@@ -213,5 +213,5 @@ def main() -> None:
     hello_world.main()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

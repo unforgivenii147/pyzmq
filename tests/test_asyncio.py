@@ -1,17 +1,12 @@
 """Test asyncio support"""
 
-# Copyright (c) PyZMQ Developers
-# Distributed under the terms of the Modified BSD License.
-
 import asyncio
 import json
 import os
 import sys
 from multiprocessing import Process
-
 import pytest
 from pytest import mark
-
 import zmq
 import zmq.asyncio as zaio
 
@@ -67,35 +62,20 @@ async def test_recv(create_bound_pair):
 async def test_recv_into(create_bound_pair):
     a, b = create_bound_pair()
     b.rcvtimeo = 1000
-    msg = [
-        b'hello',
-        b'there world',
-        b'part 3',
-        b'rest',
-    ]
+    msg = [b"hello", b"there world", b"part 3", b"rest"]
     a.send_multipart(msg)
-
-    # default nbytes: fits in array
     buf = bytearray(10)
     nbytes = await b.recv_into(buf)
     assert nbytes == len(msg[0])
     assert buf[:nbytes] == msg[0]
-
-    # default nbytes: truncates to sizeof(buf)
     buf = bytearray(4)
     nbytes = await b.recv_into(buf, flags=zmq.DONTWAIT)
-    # returned nbytes is the actual received length,
-    # which indicates truncation
     assert nbytes == len(msg[1])
     assert buf[:] == msg[1][: len(buf)]
-
-    # specify nbytes, truncates
     buf = bytearray(10)
     nbytes = 4
     nbytes_recvd = await b.recv_into(buf, nbytes=nbytes)
     assert nbytes_recvd == len(msg[2])
-
-    # recv_into empty buffer discards everything
     buf = bytearray(10)
     view = memoryview(buf)[:0]
     assert view.nbytes == 0
@@ -106,14 +86,9 @@ async def test_recv_into(create_bound_pair):
 async def test_recv_into_bad(create_bound_pair):
     a, b = create_bound_pair()
     b.rcvtimeo = 1000
-
-    # bad calls
-    # make sure flags work
     with pytest.raises(zmq.Again):
         await b.recv_into(bytearray(5), flags=zmq.DONTWAIT)
-
-    await a.send(b'msg')
-    # negative nbytes
+    await a.send(b"msg")
     buf = bytearray(10)
     with pytest.raises(ValueError):
         await b.recv_into(buf, nbytes=-1)
@@ -171,18 +146,15 @@ async def test_recv_json_cancelled(push_pull):
     f = b.recv_json()
     assert not f.done()
     f.cancel()
-    # cycle eventloop to allow cancel events to fire
     await asyncio.sleep(0)
     obj = dict(a=5)
     await a.send_json(obj)
     with pytest.raises(asyncio.CancelledError):
         recvd = await f
     assert f.done()
-    # give it a chance to incorrectly consume the event
     events = await b.poll(timeout=5)
     assert events
     await asyncio.sleep(0)
-    # make sure cancelled recv didn't eat up event
     f = b.recv_json()
     recvd = await asyncio.wait_for(f, timeout=5)
     assert recvd == obj
@@ -201,6 +173,7 @@ async def test_recv_pyobj(push_pull):
 
 
 async def test_custom_serialize(create_bound_pair):
+
     def serialize(msg):
         frames = []
         frames.extend(msg.get("identities", []))
@@ -211,24 +184,14 @@ async def test_custom_serialize(create_bound_pair):
     def deserialize(frames):
         identities = frames[:-1]
         content = json.loads(frames[-1].decode("utf8"))
-        return {
-            "identities": identities,
-            "content": content,
-        }
+        return {"identities": identities, "content": content}
 
     a, b = create_bound_pair(zmq.DEALER, zmq.ROUTER)
-
-    msg = {
-        "content": {
-            "a": 5,
-            "b": "bee",
-        }
-    }
+    msg = {"content": {"a": 5, "b": "bee"}}
     await a.send_serialized(msg, serialize)
     recvd = await b.recv_serialized(deserialize)
     assert recvd["content"] == msg["content"]
     assert recvd["identities"]
-    # bounce back, tests identities
     await b.send_serialized(recvd, serialize)
     r2 = await a.recv_serialized(deserialize)
     assert r2["content"] == msg["content"]
@@ -237,16 +200,9 @@ async def test_custom_serialize(create_bound_pair):
 
 async def test_custom_serialize_error(dealer_router):
     a, b = dealer_router
-
-    msg = {
-        "content": {
-            "a": 5,
-            "b": "bee",
-        }
-    }
+    msg = {"content": {"a": 5, "b": "bee"}}
     with pytest.raises(TypeError):
         await a.send_serialized(json, json.dumps)
-
     await a.send(b"not json")
     with pytest.raises(TypeError):
         await b.recv_serialized(json.loads)
@@ -258,7 +214,7 @@ async def test_recv_dontwait(push_pull):
     with pytest.raises(zmq.Again):
         await f
     await push.send(b"ping")
-    await pull.poll()  # ensure message will be waiting
+    await pull.poll()
     f = pull.recv(zmq.DONTWAIT)
     assert f.done()
     msg = await f
@@ -284,13 +240,10 @@ async def test_poll(push_pull):
     f = b.poll(timeout=0)
     await asyncio.sleep(0)
     assert f.result() == 0
-
     f = b.poll(timeout=1)
     assert not f.done()
     evt = await f
-
     assert evt == 0
-
     f = b.poll(timeout=1000)
     assert not f.done()
     await a.send_multipart([b"hi", b"there"])
@@ -308,10 +261,8 @@ async def test_poll_base_socket(sockets):
     sockets.extend([a, b])
     a.bind(url)
     b.connect(url)
-
     poller = zaio.Poller()
     poller.register(b, zmq.POLLIN)
-
     f = poller.poll(timeout=1000)
     assert not f.done()
     a.send_multipart([b"hi", b"there"])
@@ -323,12 +274,8 @@ async def test_poll_base_socket(sockets):
 
 async def test_poll_on_closed_socket(push_pull):
     a, b = push_pull
-
     f = b.poll(timeout=1)
     b.close()
-
-    # The test might stall if we try to await f directly so instead just make a few
-    # passes through the event loop to schedule and execute all callbacks
     for _ in range(5):
         await asyncio.sleep(0)
         if f.cancelled():
@@ -337,17 +284,13 @@ async def test_poll_on_closed_socket(push_pull):
 
 
 @pytest.mark.skipif(
-    sys.platform.startswith("win"),
-    reason="Windows does not support polling on files",
+    sys.platform.startswith("win"), reason="Windows does not support polling on files"
 )
 async def test_poll_raw():
     p = zaio.Poller()
-    # make a pipe
     r, w = os.pipe()
     r = os.fdopen(r, "rb")
     w = os.fdopen(w, "wb")
-
-    # POLLOUT
     p.register(r, zmq.POLLIN)
     p.register(w, zmq.POLLOUT)
     evts = await p.poll(timeout=1)
@@ -355,8 +298,6 @@ async def test_poll_raw():
     assert r.fileno() not in evts
     assert w.fileno() in evts
     assert evts[w.fileno()] == zmq.POLLOUT
-
-    # POLLIN
     p.unregister(w)
     w.write(b"x")
     w.flush()
@@ -373,9 +314,9 @@ def test_multiple_loops(push_pull):
     a, b = push_pull
 
     async def test():
-        await a.send(b'buf')
+        await a.send(b"buf")
         msg = await b.recv()
-        assert msg == b'buf'
+        assert msg == b"buf"
 
     for i in range(3):
         loop = asyncio.new_event_loop()
@@ -400,7 +341,6 @@ async def test_poll_leak():
             f = asyncio.ensure_future(s.poll(timeout=1000, flags=zmq.PollEvent.POLLIN))
             f.cancel()
             await asyncio.sleep(0)
-        # one more sleep allows further chained cleanup
         await asyncio.sleep(0.1)
         assert len(s._recv_futures) == 0
 
@@ -423,32 +363,30 @@ async def test_draft_asyncio():
         server.rcvtimeo = client.rcvtimeo = server.sndtimeo = client.sndtimeo = 3000
         recv_future = asyncio.ensure_future(server.recv(copy=False))
         assert not recv_future.done()
-        await client.send(b'request')
+        await client.send(b"request")
         msg = await recv_future
         recv_future = asyncio.ensure_future(client.recv())
         assert not recv_future.done()
         await server.send(msg)
         response = await recv_future
-        assert response == b'request'
+        assert response == b"request"
 
 
 class ProcessForTeardownTest(Process):
     def run(self):
-        """Leave context, socket and event loop upon implicit disposal"""
-
         actx = zaio.Context.instance()
         socket = actx.socket(zmq.PAIR)
         socket.bind_to_random_port("tcp://127.0.0.1")
 
         async def never_ending_task(socket):
-            await socket.recv()  # never ever receive anything
+            await socket.recv()
 
         loop = asyncio.new_event_loop()
         coro = asyncio.wait_for(never_ending_task(socket), timeout=1)
         try:
             loop.run_until_complete(coro)
         except asyncio.TimeoutError:
-            pass  # expected timeout
+            pass
         else:
             assert False, "never_ending_task was completed unexpectedly"
         finally:
@@ -459,6 +397,6 @@ def test_process_teardown(request):
     proc = ProcessForTeardownTest()
     proc.start()
     request.addfinalizer(proc.terminate)
-    proc.join(10)  # starting new Python process may cost a lot
+    proc.join(10)
     assert proc.exitcode is not None, "process teardown hangs"
     assert proc.exitcode == 0, f"Python process died with code {proc.exitcode}"

@@ -20,8 +20,8 @@ ctx = zmq.Context()
 
 dev = devices.ThreadDevice(zmq.FORWARDER, zmq.SUB, zmq.DEALER)
 dev.setsockopt_in(zmq.SUBSCRIBE, "")
-dev.connect_in('tcp://127.0.0.1:5555')
-dev.connect_out('tcp://127.0.0.1:5556')
+dev.connect_in("tcp://127.0.0.1:5555")
+dev.connect_out("tcp://127.0.0.1:5556")
 dev.start()
 
 # wait for connections

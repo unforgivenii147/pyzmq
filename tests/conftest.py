@@ -17,9 +17,7 @@ else:
     if version_info < (5,):
         tornado = None
     from tornado.ioloop import IOLoop
-
 import pytest
-
 import zmq
 import zmq.asyncio
 
@@ -28,21 +26,14 @@ teardown_timeout = 10
 
 
 def pytest_collection_modifyitems(items):
-    """This function is automatically run by pytest passing all collected test
-    functions.
-    We use it to add asyncio marker to all async tests and assert we don't use
-    test functions that are async generators which wouldn't make sense.
-    It is no longer required with pytest-asyncio >= 0.17
-    """
     for item in items:
         if inspect.iscoroutinefunction(item.obj):
-            item.add_marker('asyncio')
+            item.add_marker("asyncio")
         assert not inspect.isasyncgenfunction(item.obj)
 
 
 @pytest.fixture
 async def io_loop(request):
-    """Create tornado io_loop on current asyncio event loop"""
     if tornado is None:
         pytest.skip()
     io_loop = IOLoop.current()
@@ -56,13 +47,11 @@ async def io_loop(request):
 
 
 def term_context(ctx, timeout):
-    """Terminate a context with a timeout"""
     t = Thread(target=ctx.term)
     t.daemon = True
     t.start()
     t.join(timeout=timeout)
     if t.is_alive():
-        # reset Context.instance, so the failure to term doesn't corrupt subsequent tests
         zmq.sugar.context.Context._instance = None
         raise RuntimeError(
             f"context {ctx} could not terminate, open sockets likely remain in test"
@@ -71,11 +60,6 @@ def term_context(ctx, timeout):
 
 @pytest.fixture
 def sigalrm_timeout():
-    """Set timeout using SIGALRM
-
-    Avoids infinite hang in context.term for an unclean context,
-    raising an error instead.
-    """
     if not hasattr(signal, "SIGALRM") or not test_timeout_seconds:
         return
 
@@ -88,33 +72,23 @@ def sigalrm_timeout():
 
 @pytest.fixture
 def Context():
-    """Context class fixture
-
-    Override in modules to specify a different class (e.g. zmq.green)
-    """
     return zmq.Context
 
 
 @pytest.fixture
 def contexts(sigalrm_timeout):
-    """Fixture to track contexts used in tests
-
-    For cleanup purposes
-    """
     contexts = set()
     yield contexts
     for ctx in contexts:
         try:
             term_context(ctx, teardown_timeout)
         except Exception:
-            # reset Context.instance, so the failure to term doesn't corrupt subsequent tests
             zmq.sugar.context.Context._instance = None
             raise
 
 
 @pytest.fixture
 def context(Context, contexts):
-    """Fixture for shared context"""
     ctx = Context()
     contexts.add(ctx)
     return ctx
@@ -124,18 +98,14 @@ def context(Context, contexts):
 def sockets(contexts):
     sockets = []
     yield sockets
-    # ensure any tracked sockets get their contexts cleaned up
     for socket in sockets:
         contexts.add(socket.context)
-
-    # close sockets
     for socket in sockets:
         socket.close(linger=0)
 
 
 @pytest.fixture
 def socket(context, sockets):
-    """Fixture to create sockets, while tracking them for cleanup"""
 
     def new_socket(*args, **kwargs):
         s = context.socket(*args, **kwargs)
@@ -157,17 +127,11 @@ def assert_raises_errno(errno):
 
 
 def recv(socket, *, timeout=5, flags=0, multipart=False, **kwargs):
-    """call recv[_multipart] in a way that raises if there is nothing to receive"""
     if zmq.zmq_version_info() >= (3, 1, 0):
-        # zmq 3.1 has a bug, where poll can return false positives,
-        # so we wait a little bit just in case
-        # See LIBZMQ-280 on JIRA
         time.sleep(0.1)
-
     r, w, x = zmq.select([socket], [], [], timeout=timeout)
     assert r, "Should have received a message"
-    kwargs['flags'] = zmq.DONTWAIT | kwargs.get('flags', 0)
-
+    kwargs["flags"] = zmq.DONTWAIT | kwargs.get("flags", 0)
     recv = socket.recv_multipart if multipart else socket.recv
     return recv(flags=flags, **kwargs)
 
@@ -177,15 +141,15 @@ recv_multipart = partial(recv, multipart=True)
 
 @pytest.fixture
 def create_bound_pair(socket):
-    def create_bound_pair(type1=zmq.PAIR, type2=zmq.PAIR, interface='tcp://127.0.0.1'):
-        """Create a bound socket pair using a random port."""
+
+    def create_bound_pair(type1=zmq.PAIR, type2=zmq.PAIR, interface="tcp://127.0.0.1"):
         s1 = socket(type1)
         s1.linger = 0
         port = s1.bind_to_random_port(interface)
         s2 = socket(type2)
         s2.linger = 0
-        s2.connect(f'{interface}:{port}')
-        return s1, s2
+        s2.connect(f"{interface}:{port}")
+        return (s1, s2)
 
     return create_bound_pair
 

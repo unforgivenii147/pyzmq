@@ -1,9 +1,4 @@
-# Copyright (C) PyZMQ Developers
-# Distributed under the terms of the Modified BSD License.
-
-
 from unittest import TestCase
-
 import zmq
 from zmq.sugar import version
 
@@ -14,7 +9,7 @@ class TestVersion(TestCase):
         vs2 = zmq.__version__
         assert isinstance(vs, str)
         if zmq.__revision__:
-            assert vs == '@'.join(vs2, zmq.__revision__)
+            assert vs == "@".join(vs2, zmq.__revision__)
         else:
             assert vs == vs2
         if version.VERSION_EXTRA:
@@ -28,7 +23,7 @@ class TestVersion(TestCase):
             assert isinstance(n, int)
         if version.VERSION_EXTRA:
             assert len(info) == 4
-            assert info[-1] == float('inf')
+            assert info[-1] == float("inf")
         else:
             assert len(info) == 3
 

@@ -13,7 +13,7 @@ import zmq
 
 print("Running polling tests for REQ/REP sockets...")
 
-addr = 'tcp://127.0.0.1:5555'
+addr = "tcp://127.0.0.1:5555"
 ctx = zmq.Context()
 s1 = ctx.socket(zmq.REP)
 s2 = ctx.socket(zmq.REQ)
@@ -34,7 +34,7 @@ assert s1 not in socks
 assert socks[s2] == zmq.POLLOUT
 
 # Make sure that s2 goes immediately into state 0 after send.
-s2.send('msg1')
+s2.send("msg1")
 socks = dict(poller.poll())
 assert s2 not in socks
 
@@ -49,7 +49,7 @@ socks = dict(poller.poll())
 assert socks[s1] == zmq.POLLOUT
 
 # Make sure s1 goes into state 0 after send.
-s1.send('msg2')
+s1.send("msg2")
 socks = dict(poller.poll())
 assert s1 not in socks
 

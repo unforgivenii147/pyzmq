@@ -1,17 +1,11 @@
-# Copyright (c) PyZMQ Developers
-# Distributed under the terms of the Modified BSD License.
-
 import json
 import os
 import sys
 from datetime import timedelta
-
 import pytest
 
-gen = pytest.importorskip('tornado.gen')
-
+gen = pytest.importorskip("tornado.gen")
 from tornado.ioloop import IOLoop
-
 import zmq
 from zmq.eventloop import future
 from zmq_test_utils import BaseZMQTestCase
@@ -51,17 +45,19 @@ class TestFutureSocket(BaseZMQTestCase):
         assert type(actx) is self.Context
 
     def test_recv_multipart(self):
+
         async def test():
             a, b = self.create_bound_pair(zmq.PUSH, zmq.PULL)
             f = b.recv_multipart()
             assert not f.done()
             await a.send(b"hi")
             recvd = await f
-            assert recvd == [b'hi']
+            assert recvd == [b"hi"]
 
         self.loop.run_sync(test)
 
     def test_recv(self):
+
         async def test():
             a, b = self.create_bound_pair(zmq.PUSH, zmq.PULL)
             f1 = b.recv()
@@ -71,12 +67,13 @@ class TestFutureSocket(BaseZMQTestCase):
             await a.send_multipart([b"hi", b"there"])
             recvd = await f2
             assert f1.done()
-            assert f1.result() == b'hi'
-            assert recvd == b'there'
+            assert f1.result() == b"hi"
+            assert recvd == b"there"
 
         self.loop.run_sync(test)
 
     def test_recv_cancel(self):
+
         async def test():
             a, b = self.create_bound_pair(zmq.PUSH, zmq.PULL)
             f1 = b.recv()
@@ -88,12 +85,13 @@ class TestFutureSocket(BaseZMQTestCase):
             recvd = await f2
             assert f1.cancelled()
             assert f2.done()
-            assert recvd == [b'hi', b'there']
+            assert recvd == [b"hi", b"there"]
 
         self.loop.run_sync(test)
 
-    @pytest.mark.skipif(not hasattr(zmq, 'RCVTIMEO'), reason="requires RCVTIMEO")
+    @pytest.mark.skipif(not hasattr(zmq, "RCVTIMEO"), reason="requires RCVTIMEO")
     def test_recv_timeout(self):
+
         async def test():
             a, b = self.create_bound_pair(zmq.PUSH, zmq.PULL)
             b.rcvtimeo = 100
@@ -105,12 +103,13 @@ class TestFutureSocket(BaseZMQTestCase):
             await a.send_multipart([b"hi", b"there"])
             recvd = await f2
             assert f2.done()
-            assert recvd == [b'hi', b'there']
+            assert recvd == [b"hi", b"there"]
 
         self.loop.run_sync(test)
 
-    @pytest.mark.skipif(not hasattr(zmq, 'SNDTIMEO'), reason="requires SNDTIMEO")
+    @pytest.mark.skipif(not hasattr(zmq, "SNDTIMEO"), reason="requires SNDTIMEO")
     def test_send_timeout(self):
+
         async def test():
             s = self.socket(zmq.PUSH)
             s.sndtimeo = 100
@@ -120,6 +119,7 @@ class TestFutureSocket(BaseZMQTestCase):
         self.loop.run_sync(test)
 
     def test_send_noblock(self):
+
         async def test():
             s = self.socket(zmq.PUSH)
             with pytest.raises(zmq.Again):
@@ -128,6 +128,7 @@ class TestFutureSocket(BaseZMQTestCase):
         self.loop.run_sync(test)
 
     def test_send_multipart_noblock(self):
+
         async def test():
             s = self.socket(zmq.PUSH)
             with pytest.raises(zmq.Again):
@@ -136,11 +137,12 @@ class TestFutureSocket(BaseZMQTestCase):
         self.loop.run_sync(test)
 
     def test_recv_string(self):
+
         async def test():
             a, b = self.create_bound_pair(zmq.PUSH, zmq.PULL)
             f = b.recv_string()
             assert not f.done()
-            msg = 'πøøπ'
+            msg = "πøøπ"
             await a.send_string(msg)
             recvd = await f
             assert f.done()
@@ -150,6 +152,7 @@ class TestFutureSocket(BaseZMQTestCase):
         self.loop.run_sync(test)
 
     def test_recv_json(self):
+
         async def test():
             a, b = self.create_bound_pair(zmq.PUSH, zmq.PULL)
             f = b.recv_json()
@@ -164,29 +167,28 @@ class TestFutureSocket(BaseZMQTestCase):
         self.loop.run_sync(test)
 
     def test_recv_json_cancelled(self):
+
         async def test():
             a, b = self.create_bound_pair(zmq.PUSH, zmq.PULL)
             f = b.recv_json()
             assert not f.done()
             f.cancel()
-            # cycle eventloop to allow cancel events to fire
             await gen.sleep(0)
             obj = dict(a=5)
             await a.send_json(obj)
             with pytest.raises(future.CancelledError):
                 recvd = await f
             assert f.done()
-            # give it a chance to incorrectly consume the event
             events = await b.poll(timeout=5)
             assert events
             await gen.sleep(0)
-            # make sure cancelled recv didn't eat up event
             recvd = await gen.with_timeout(timedelta(seconds=5), b.recv_json())
             assert recvd == obj
 
         self.loop.run_sync(test)
 
     def test_recv_pyobj(self):
+
         async def test():
             a, b = self.create_bound_pair(zmq.PUSH, zmq.PULL)
             f = b.recv_pyobj()
@@ -201,55 +203,40 @@ class TestFutureSocket(BaseZMQTestCase):
         self.loop.run_sync(test)
 
     def test_custom_serialize(self):
+
         def serialize(msg):
             frames = []
-            frames.extend(msg.get('identities', []))
-            content = json.dumps(msg['content']).encode('utf8')
+            frames.extend(msg.get("identities", []))
+            content = json.dumps(msg["content"]).encode("utf8")
             frames.append(content)
             return frames
 
         def deserialize(frames):
             identities = frames[:-1]
-            content = json.loads(frames[-1].decode('utf8'))
-            return {
-                'identities': identities,
-                'content': content,
-            }
+            content = json.loads(frames[-1].decode("utf8"))
+            return {"identities": identities, "content": content}
 
         async def test():
             a, b = self.create_bound_pair(zmq.DEALER, zmq.ROUTER)
-
-            msg = {
-                'content': {
-                    'a': 5,
-                    'b': 'bee',
-                }
-            }
+            msg = {"content": {"a": 5, "b": "bee"}}
             await a.send_serialized(msg, serialize)
             recvd = await b.recv_serialized(deserialize)
-            assert recvd['content'] == msg['content']
-            assert recvd['identities']
-            # bounce back, tests identities
+            assert recvd["content"] == msg["content"]
+            assert recvd["identities"]
             await b.send_serialized(recvd, serialize)
             r2 = await a.recv_serialized(deserialize)
-            assert r2['content'] == msg['content']
-            assert not r2['identities']
+            assert r2["content"] == msg["content"]
+            assert not r2["identities"]
 
         self.loop.run_sync(test)
 
     def test_custom_serialize_error(self):
+
         async def test():
             a, b = self.create_bound_pair(zmq.DEALER, zmq.ROUTER)
-
-            msg = {
-                'content': {
-                    'a': 5,
-                    'b': 'bee',
-                }
-            }
+            msg = {"content": {"a": 5, "b": "bee"}}
             with pytest.raises(TypeError):
                 await a.send_serialized(json, json.dumps)
-
             await a.send(b"not json")
             with pytest.raises(TypeError):
                 await b.recv_serialized(json.loads)
@@ -257,50 +244,48 @@ class TestFutureSocket(BaseZMQTestCase):
         self.loop.run_sync(test)
 
     def test_poll(self):
+
         async def test():
             a, b = self.create_bound_pair(zmq.PUSH, zmq.PULL)
             f = b.poll(timeout=0)
             assert f.done()
             assert f.result() == 0
-
             f = b.poll(timeout=1)
             assert not f.done()
             evt = await f
             assert evt == 0
-
             f = b.poll(timeout=1000)
             assert not f.done()
             await a.send_multipart([b"hi", b"there"])
             evt = await f
             assert evt == zmq.POLLIN
             recvd = await b.recv_multipart()
-            assert recvd == [b'hi', b'there']
+            assert recvd == [b"hi", b"there"]
 
         self.loop.run_sync(test)
 
     @pytest.mark.skipif(
-        sys.platform.startswith('win'), reason='Windows unsupported socket type'
+        sys.platform.startswith("win"), reason="Windows unsupported socket type"
     )
     def test_poll_base_socket(self):
+
         async def test():
             ctx = zmq.Context()
-            url = 'inproc://test'
+            url = "inproc://test"
             a = ctx.socket(zmq.PUSH)
             b = ctx.socket(zmq.PULL)
             self.sockets.extend([a, b])
             a.bind(url)
             b.connect(url)
-
             poller = future.Poller()
             poller.register(b, zmq.POLLIN)
-
             f = poller.poll(timeout=1000)
             assert not f.done()
-            a.send_multipart([b'hi', b'there'])
+            a.send_multipart([b"hi", b"there"])
             evt = await f
             assert evt == [(b, zmq.POLLIN)]
             recvd = b.recv_multipart()
-            assert recvd == [b'hi', b'there']
+            assert recvd == [b"hi", b"there"]
             a.close()
             b.close()
             ctx.term()
@@ -315,22 +300,20 @@ class TestFutureSocket(BaseZMQTestCase):
 
         self.loop.run_sync(attach)
         self.loop.close(all_fds=True)
-        self.loop = None  # avoid second close later
+        self.loop = None
         assert s.closed
 
     @pytest.mark.skipif(
-        sys.platform.startswith('win'),
-        reason='Windows does not support polling on files',
+        sys.platform.startswith("win"),
+        reason="Windows does not support polling on files",
     )
     def test_poll_raw(self):
+
         async def test():
             p = future.Poller()
-            # make a pipe
             r, w = os.pipe()
-            r = os.fdopen(r, 'rb')
-            w = os.fdopen(w, 'wb')
-
-            # POLLOUT
+            r = os.fdopen(r, "rb")
+            w = os.fdopen(w, "wb")
             p.register(r, zmq.POLLIN)
             p.register(w, zmq.POLLOUT)
             evts = await p.poll(timeout=1)
@@ -338,16 +321,14 @@ class TestFutureSocket(BaseZMQTestCase):
             assert r.fileno() not in evts
             assert w.fileno() in evts
             assert evts[w.fileno()] == zmq.POLLOUT
-
-            # POLLIN
             p.unregister(w)
-            w.write(b'x')
+            w.write(b"x")
             w.flush()
             evts = await p.poll(timeout=1000)
             evts = dict(evts)
             assert r.fileno() in evts
             assert evts[r.fileno()] == zmq.POLLIN
-            assert r.read(1) == b'x'
+            assert r.read(1) == b"x"
             r.close()
             w.close()
 

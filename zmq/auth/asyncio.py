@@ -3,22 +3,15 @@
 .. versionadded:: 15.2
 """
 
-# Copyright (C) PyZMQ Developers
-# Distributed under the terms of the Modified BSD License.
-
 import asyncio
 import warnings
 from typing import Any, Optional
-
 import zmq
 from zmq.asyncio import Poller
-
 from .base import Authenticator
 
 
 class AsyncioAuthenticator(Authenticator):
-    """ZAP authentication for use in the asyncio IO loop"""
-
     __poller: Optional[Poller]
     __task: Any
 
@@ -26,7 +19,7 @@ class AsyncioAuthenticator(Authenticator):
         self,
         context: Optional["zmq.Context"] = None,
         loop: Any = None,
-        encoding: str = 'utf-8',
+        encoding: str = "utf-8",
         log: Any = None,
     ):
         super().__init__(context, encoding, log)
@@ -47,14 +40,12 @@ class AsyncioAuthenticator(Authenticator):
                 await self.handle_zap_message(msg)
 
     def start(self) -> None:
-        """Start ZAP authentication"""
         super().start()
         self.__poller = Poller()
         self.__poller.register(self.zap_socket, zmq.POLLIN)
         self.__task = asyncio.ensure_future(self.__handle_zap())
 
     def stop(self) -> None:
-        """Stop ZAP authentication"""
         if self.__task:
             self.__task.cancel()
         if self.__poller:

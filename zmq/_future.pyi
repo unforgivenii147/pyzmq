@@ -78,11 +78,11 @@ class _AsyncSocket(_zmq.Socket[Future]):
         flags: int = 0,
         copy: bool = True,
         *,
-        encoding: str = 'utf-8',
+        encoding: str = "utf-8",
         **kwargs,
     ) -> Awaitable[_zmq.Frame | None]: ...
     def recv_string(  # type: ignore
-        self, flags: int = 0, encoding: str = 'utf-8'
+        self, flags: int = 0, encoding: str = "utf-8"
     ) -> Awaitable[str]: ...
     def send_pyobj(  # type: ignore
         self, obj: Any, flags: int = 0, protocol: int = DEFAULT_PROTOCOL, **kwargs

@@ -6,17 +6,12 @@
 
 """
 
-# Copyright (c) PyZMQ Developers.
-# Distributed under the terms of the Modified BSD License.
 from __future__ import annotations
-
 import asyncio
 import warnings
 from typing import Any
-
 from tornado.concurrent import Future
 from tornado.ioloop import IOLoop
-
 import zmq as _zmq
 from zmq._future import _AsyncPoller, _AsyncSocket
 
@@ -26,8 +21,6 @@ class CancelledError(Exception):
 
 
 class _TornadoFuture(Future):
-    """Subclass Tornado Future, reinstating cancellation."""
-
     def cancel(self):
         if self.done():
             return False
@@ -47,9 +40,6 @@ class _CancellableTornadoTimeout:
         self.loop.remove_timeout(self.timeout)
 
 
-# mixin for tornado/asyncio compatibility
-
-
 class _AsyncTornado:
     _Future: type[asyncio.Future] = _TornadoFuture
     _READ = IOLoop.READ
@@ -66,11 +56,9 @@ class _AsyncTornado:
 
 class Poller(_AsyncTornado, _AsyncPoller):
     def _watch_raw_socket(self, loop, socket, evt, f):
-        """Schedule callback for a raw socket"""
         loop.add_handler(socket, lambda *args: f(), evt)
 
     def _unwatch_raw_sockets(self, loop, *sockets):
-        """Unschedule callback for a raw socket"""
         for socket in sockets:
             loop.remove_handler(socket)
 
@@ -83,9 +71,7 @@ Poller._socket_class = Socket
 
 
 class Context(_zmq.Context[Socket]):
-    # avoid sharing instance with base Context class
     _instance = None
-
     io_loop = None
 
     @staticmethod
@@ -93,12 +79,11 @@ class Context(_zmq.Context[Socket]):
         return Socket(self, socket_type)
 
     def __init__(self: Context, *args: Any, **kwargs: Any) -> None:
-        io_loop = kwargs.pop('io_loop', None)
+        io_loop = kwargs.pop("io_loop", None)
         if io_loop is not None:
             warnings.warn(
-                f"{self.__class__.__name__}(io_loop) argument is deprecated in pyzmq 22.2."
-                " The currently active loop will always be used.",
+                f"{self.__class__.__name__}(io_loop) argument is deprecated in pyzmq 22.2. The currently active loop will always be used.",
                 DeprecationWarning,
                 stacklevel=2,
             )
-        super().__init__(*args, **kwargs)  # type: ignore
+        super().__init__(*args, **kwargs)

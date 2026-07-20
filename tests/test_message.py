@@ -1,7 +1,3 @@
-# Copyright (C) PyZMQ Developers
-# Distributed under the terms of the Modified BSD License.
-
-
 import copy
 import gc
 
@@ -11,19 +7,13 @@ except ImportError:
     grc = None
 else:
     grc = getrefcount
-
 import time
-
 import pytest
-
 import zmq
 from zmq.utils.garbage import gc as zmq_gc
 from zmq_test_utils import PYPY, BaseZMQTestCase, SkipTest, skip_cpython_cffi, skip_pypy
 
-# some useful constants:
-
-x = b'x'
-
+x = b"x"
 if grc:
     rc0 = grc(x)
     v = memoryview(x)
@@ -31,11 +21,6 @@ if grc:
 
 
 def await_gc(gc_key):
-    """wait for zmq garbage collection
-
-    Necessary because of the zero-copy gc thread,
-    which can take some time to receive its DECREF message.
-    """
     deadline = time.monotonic() + 3
     gc.collect()
     while time.monotonic() < deadline:
@@ -50,26 +35,21 @@ def await_gc(gc_key):
 class TestFrame(BaseZMQTestCase):
     def setUp(self):
         super().setUp()
-        # make sure we are starting clean
         assert not zmq_gc.refs
 
     def tearDown(self):
         super().tearDown()
         for i in range(3):
             gc.collect()
-
         deadline = time.monotonic() + 3
         while zmq_gc.refs and time.monotonic() < deadline:
             time.sleep(0.05)
-
-        # make sure we left no refs
         assert not zmq_gc.refs
 
     @skip_pypy
     def test_above_30(self):
-        """Message above 30 bytes are never copied by 0MQ."""
-        for i in range(5, 16):  # 32, 64,..., 65536
-            s = (2**i) * x
+        for i in range(5, 16):
+            s = 2**i * x
             rc = grc(s)
             m = zmq.Frame(s, copy=False)
             _gc_ref = next(iter(zmq_gc.refs))
@@ -80,52 +60,45 @@ class TestFrame(BaseZMQTestCase):
             del s
 
     def test_str(self):
-        """Test the str representations of the Frames."""
-        m = zmq.Frame(b'')
+        m = zmq.Frame(b"")
         assert str(m) == "<zmq.Frame(b'')>"
-        m = zmq.Frame(b'123456789')
+        m = zmq.Frame(b"123456789")
         assert str(m) == "<zmq.Frame(b'123456789')>"
-        m = zmq.Frame(b'x' * 20)
+        m = zmq.Frame(b"x" * 20)
         assert str(m) == "<zmq.Frame(b'xxxxxxxxxxxx'...20B)>"
-        m = zmq.Frame(b'x' * 2000)
+        m = zmq.Frame(b"x" * 2000)
         assert str(m) == "<zmq.Frame(b'xxxxxxxxxxxx'...2kB)>"
-        m = zmq.Frame(b'x' * 2_000_000)
+        m = zmq.Frame(b"x" * 2000000)
         assert str(m) == "<zmq.Frame(b'xxxxxxxxxxxx'...2MB)>"
 
     def test_bytes(self):
-        """Test the Frame.bytes property."""
         for i in range(1, 16):
-            s = (2**i) * x
+            s = 2**i * x
             m = zmq.Frame(s)
             b = m.bytes
             assert s == m.bytes
             if not PYPY:
-                # check that it copies
                 assert b is not s
-            # check that it copies only once
             assert b is m.bytes
 
     def test_unicode(self):
-        """Test the unicode representations of the Frames."""
-        s = 'asdf'
+        s = "asdf"
         self.assertRaises(TypeError, zmq.Frame, s)
         for i in range(16):
-            s = (2**i) * '§'
-            m = zmq.Frame(s.encode('utf8'))
-            assert s == m.bytes.decode('utf8')
+            s = 2**i * "§"
+            m = zmq.Frame(s.encode("utf8"))
+            assert s == m.bytes.decode("utf8")
 
     def test_len(self):
-        """Test the len of the Frames."""
         for i in range(16):
-            s = (2**i) * x
+            s = 2**i * x
             m = zmq.Frame(s)
             assert len(s) == len(m)
 
     @skip_pypy
     def test_lifecycle1(self):
-        """Run through a ref counting cycle with a copy."""
-        for i in range(5, 16):  # 32, 64,..., 65536
-            s = (2**i) * x
+        for i in range(5, 16):
+            s = 2**i * x
             rc = rc_0 = grc(s)
             m = zmq.Frame(s, copy=False)
             _gc_ref = next(iter(zmq_gc.refs))
@@ -134,17 +107,13 @@ class TestFrame(BaseZMQTestCase):
             m2 = copy.copy(m)
             rc += 1
             assert grc(s) == rc
-            # no increase in refcount for accessing buffer
-            # which references m2 directly
             buf = m2.buffer
             assert grc(s) == rc
-
             assert s == bytes(m2)
             assert s == m.bytes
             assert s == bytes(buf)
             del m2
             assert grc(s) == rc
-            # buf holds direct reference to m2 which holds
             del buf
             rc -= 1
             assert grc(s) == rc
@@ -157,9 +126,8 @@ class TestFrame(BaseZMQTestCase):
 
     @skip_pypy
     def test_lifecycle2(self):
-        """Run through a different ref counting cycle with a copy."""
-        for i in range(5, 16):  # 32, 64,..., 65536
-            s = (2**i) * x
+        for i in range(5, 16):
+            s = 2**i * x
             rc = rc_0 = grc(s)
             m = zmq.Frame(s, copy=False)
             _gc_ref = next(iter(zmq_gc.refs))
@@ -168,8 +136,6 @@ class TestFrame(BaseZMQTestCase):
             m2 = copy.copy(m)
             rc += 1
             assert grc(s) == rc
-            # no increase in refcount for accessing buffer
-            # which references m directly
             buf = m.buffer
             assert grc(s) == rc
             assert s == bytes(m2)
@@ -189,7 +155,7 @@ class TestFrame(BaseZMQTestCase):
             del s
 
     def test_tracker(self):
-        m = zmq.Frame(b'asdf', copy=False, track=True)
+        m = zmq.Frame(b"asdf", copy=False, track=True)
         assert not m.tracker.done
         pm = zmq.MessageTracker(m)
         assert not pm.done
@@ -203,15 +169,15 @@ class TestFrame(BaseZMQTestCase):
         assert pm.done
 
     def test_no_tracker(self):
-        m = zmq.Frame(b'asdf', track=False)
+        m = zmq.Frame(b"asdf", track=False)
         assert m.tracker is None
         m2 = copy.copy(m)
         assert m2.tracker is None
         self.assertRaises(ValueError, zmq.MessageTracker, m)
 
     def test_multi_tracker(self):
-        m = zmq.Frame(b'asdf', copy=False, track=True)
-        m2 = zmq.Frame(b'whoda', copy=False, track=True)
+        m = zmq.Frame(b"asdf", copy=False, track=True)
+        m2 = zmq.Frame(b"whoda", copy=False, track=True)
         mt = zmq.MessageTracker(m, m2)
         assert not m.tracker.done
         assert not mt.done
@@ -228,13 +194,11 @@ class TestFrame(BaseZMQTestCase):
         assert mt.done
 
     def test_buffer_in(self):
-        """test using a buffer as input"""
         ins = "§§¶•ªº˜µ¬˚…∆˙åß∂©œ∑´†≈ç√".encode()
         zmq.Frame(memoryview(ins))
         zmq.Frame(bytearray(5))
 
     def test_bad_buffer_in(self):
-        """test using a bad object"""
         with pytest.raises(TypeError):
             zmq.Frame(5)
         with pytest.raises(TypeError):
@@ -245,7 +209,6 @@ class TestFrame(BaseZMQTestCase):
             zmq.Frame(memoryview(bytearray(10))[::2])
 
     def test_buffer_out(self):
-        """receiving buffered output"""
         ins = "§§¶•ªº˜µ¬˚…∆˙åß∂©œ∑´†≈ç√".encode()
         m = zmq.Frame(ins)
         outb = m.buffer
@@ -255,7 +218,6 @@ class TestFrame(BaseZMQTestCase):
 
     @skip_cpython_cffi
     def test_memoryview_shape(self):
-        """memoryview shape info"""
         data = "§§¶•ªº˜µ¬˚…∆˙åß∂©œ∑´†≈ç√".encode()
         n = len(data)
         f = zmq.Frame(data)
@@ -269,12 +231,10 @@ class TestFrame(BaseZMQTestCase):
         assert view2.tobytes() == data
 
     def test_multisend(self):
-        """ensure that a message remains intact after multiple sends"""
         a, b = self.create_bound_pair(zmq.PAIR, zmq.PAIR)
         s = b"message"
         m = zmq.Frame(s)
         assert s == m.bytes
-
         a.send(m, copy=False)
         time.sleep(0.1)
         assert s == m.bytes
@@ -293,8 +253,7 @@ class TestFrame(BaseZMQTestCase):
         assert s == m.bytes
 
     def test_memoryview(self):
-        """test messages from memoryview"""
-        s = b'carrotjuice'
+        s = b"carrotjuice"
         memoryview(s)
         m = zmq.Frame(s)
         buf = m.buffer
@@ -304,19 +263,16 @@ class TestFrame(BaseZMQTestCase):
 
     @skip_cpython_cffi
     def test_noncopying_recv(self):
-        """check for clobbering message buffers"""
-        null = b'\0' * 64
+        null = b"\x00" * 64
         sa, sb = self.create_bound_pair(zmq.PAIR, zmq.PAIR)
         for i in range(32):
-            # try a few times
             sb.send(null, copy=False)
             m = sa.recv(copy=False)
             mb = m.bytes
-            # buf = memoryview(m)
             buf = m.buffer
             del m
             for i in range(5):
-                ff = b'\xff' * (40 + i * 10)
+                ff = b"\xff" * (40 + i * 10)
                 sb.send(ff, copy=False)
                 m2 = sa.recv(copy=False)
                 b = buf.tobytes()
@@ -327,16 +283,14 @@ class TestFrame(BaseZMQTestCase):
 
     @skip_cpython_cffi
     def test_noncopying_memoryview(self):
-        """test non-copying memmoryview messages"""
-        null = b'\0' * 64
+        null = b"\x00" * 64
         sa, sb = self.create_bound_pair(zmq.PAIR, zmq.PAIR)
         for i in range(32):
-            # try a few times
             sb.send(memoryview(null), copy=False)
             m = sa.recv(copy=False)
             buf = memoryview(m)
             for i in range(5):
-                ff = b'\xff' * (40 + i * 10)
+                ff = b"\xff" * (40 + i * 10)
                 sb.send(memoryview(ff), copy=False)
                 m2 = sa.recv(copy=False)
                 buf2 = memoryview(m2)
@@ -347,7 +301,6 @@ class TestFrame(BaseZMQTestCase):
                 assert type(buf) is memoryview
 
     def test_buffer_numpy(self):
-        """test non-copying numpy array messages"""
         try:
             import numpy
             from numpy.testing import assert_array_equal
@@ -356,39 +309,35 @@ class TestFrame(BaseZMQTestCase):
         rand = numpy.random.randint
         shapes = [rand(2, 5) for i in range(5)]
         a, b = self.create_bound_pair(zmq.PAIR, zmq.PAIR)
-        dtypes = [int, float, '>i4', 'B']
+        dtypes = [int, float, ">i4", "B"]
         for i in range(1, len(shapes) + 1):
             shape = shapes[:i]
             for dt in dtypes:
                 A = numpy.empty(shape, dtype=dt)
                 a.send(A, copy=False)
                 msg = b.recv(copy=False)
-
                 B = numpy.frombuffer(msg, A.dtype).reshape(A.shape)
                 assert_array_equal(A, B)
-
-            A = numpy.empty(shape, dtype=[('a', int), ('b', float), ('c', 'a32')])
-            A['a'] = 1024
-            A['b'] = 1e9
-            A['c'] = 'hello there'
+            A = numpy.empty(shape, dtype=[("a", int), ("b", float), ("c", "a32")])
+            A["a"] = 1024
+            A["b"] = 1000000000.0
+            A["c"] = "hello there"
             a.send(A, copy=False)
             msg = b.recv(copy=False)
-
             B = numpy.frombuffer(msg, A.dtype).reshape(A.shape)
             assert_array_equal(A, B)
 
     @skip_pypy
     def test_frame_more(self):
-        """test Frame.more attribute"""
         frame = zmq.Frame(b"hello")
         assert not frame.more
         sa, sb = self.create_bound_pair(zmq.PAIR, zmq.PAIR)
-        sa.send_multipart([b'hi', b'there'])
+        sa.send_multipart([b"hi", b"there"])
         frame = self.recv(sb, copy=False)
         assert frame.more
-        if zmq.zmq_version_info()[0] >= 3 and not PYPY:
+        if zmq.zmq_version_info()[0] >= 3 and (not PYPY):
             assert frame.get(zmq.MORE)
         frame = self.recv(sb, copy=False)
         assert not frame.more
-        if zmq.zmq_version_info()[0] >= 3 and not PYPY:
+        if zmq.zmq_version_info()[0] >= 3 and (not PYPY):
             assert not frame.get(zmq.MORE)
